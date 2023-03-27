@@ -1,6 +1,7 @@
 package database
 
 import (
+	models "cricHeros/Models"
 	"fmt"
 	"os"
 
@@ -12,7 +13,7 @@ var DB *gorm.DB
 
 func Connect() error {
 	fmt.Println("Connecting to database...")
-	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", os.Getenv("DB_Host"), os.Getenv("DB_Port"), os.Getenv("DB_User"), os.Getenv("DB_Password"), os.Getenv("DB_NAME"))
+	dsn := fmt.Sprintf("host=%v port=%v user=%v password=%v dbname=%v sslmode=disable", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"))
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -20,6 +21,11 @@ func Connect() error {
 		return err
 	}
 	DB = db
+	err = db.AutoMigrate(&models.Player{}, &models.BattingCareer{}, &models.BowlingCareer{}, &models.Match{}, &models.Team{})
+	if err != nil {
+		fmt.Println("Error in creating the tables..")
+		return err
+	}
 	fmt.Println("Succesfully connected to database...")
 	return nil
 }

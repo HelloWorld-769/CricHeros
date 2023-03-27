@@ -1,6 +1,7 @@
 package routes
 
 import (
+	c "cricHeros/Controllers"
 	db "cricHeros/Database"
 	"fmt"
 	"log"
@@ -15,8 +16,21 @@ func Routes() {
 	if err != nil {
 		panic(err)
 	}
-	mux.HandleFunc("/welcome", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Welomce to Cric heros application"))
-	})
+
+	//Player routes
+	mux.HandleFunc("/createPlayer", c.AddPlayerHandler)
+	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler)
+	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler)
+
+	//Batting career routes
+	mux.HandleFunc("/addBatting", c.AddBattingHandler)
+
+	//Bowling career routes
+	mux.HandleFunc("/addBowling", c.AddBowlingHandler)
+
+	//team routes
+	mux.HandleFunc("/createTeam", c.CreateTeamHandler)
+	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
+	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))
 }
