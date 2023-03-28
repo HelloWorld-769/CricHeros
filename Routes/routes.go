@@ -30,6 +30,7 @@ func Routes() {
 
 	//team routes
 	mux.HandleFunc("/createTeam", c.CreateTeamHandler)
+	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler)
 	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
 	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))

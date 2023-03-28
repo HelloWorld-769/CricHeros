@@ -45,11 +45,12 @@ type BowlingCareer struct {
 	Economy float64 `json:"economy"`
 }
 type Match struct {
-	M_ID  string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
-	S_ID  string `json:"scorecard_id"` //scorecard related to it
-	T1_ID string
-	T2_ID string
-	Text  string `json:"text"` //who won the match
+	M_ID   string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
+	S_ID   string `json:"scorecard_id"` //scorecard related to it
+	T1_ID  string
+	T2_ID  string
+	Text   string `json:"text"` //who won the match/
+	Status string `json:"status" gorm:"default:active"`
 }
 
 type Team struct {

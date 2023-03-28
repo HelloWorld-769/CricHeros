@@ -12,24 +12,29 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	var team models.Team
 	json.NewDecoder(r.Body).Decode(&team)
 	db.DB.Create(&team)
+	json.NewEncoder(w).Encode(&team)
 }
-func AddPlayerToTeam(w http.ResponseWriter, r *http.Request) {
-	var mp = make(map[string]string)
+func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var mp = make(map[string][]string)
+
 	json.NewDecoder(r.Body).Decode(&mp)
-	id := mp["id"]
+	id := r.URL.Query().Get("id")
 	var team models.Team
 	db.DB.Where("t_id=?", id).First(&team)
-	var players []string
-	for _, p := range players {
+	for _, p := range mp["players"] {
 		team.P_ID = p
 		db.DB.Create(&team)
 	}
+	db.DB.Exec("DELETE FROM teams WHERE p_id=''")
 
 }
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
+
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -65,30 +70,3 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&player)
 
 }
-func DeleteFromTeamHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-// func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
-// 	if r.Method != http.MethodPost {
-// 		w.WriteHeader(http.StatusMethodNotAllowed)
-// 		return
-// 	}
-// 	var team models.Team
-// 	json.NewDecoder(r.Body).Decode(&team)
-
-// 	var player models.Player
-// 	db.DB.Where("p_id=?", team.P_ID).First(&player)
-// 	if player.Is_Captain {
-// 		team.T_Captain = player.P_Name
-// 	}
-// 	var existingTeam models.Team
-// 	err := db.DB.Where("t_name=?", team.T_Name).First(&existingTeam).Error
-// 	if errors.Is(err, gorm.ErrRecordNotFound) {
-// 		db.DB.Create(&team)
-// 		return
-// 	}
-
-// 	team.T_ID = existingTeam.T_ID
-// 	db.DB.Create(&team)
-// }
