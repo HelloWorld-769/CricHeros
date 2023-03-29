@@ -9,19 +9,19 @@ import (
 )
 
 // function to add players batting career
-func AddBowlingHandler(w http.ResponseWriter, r *http.Request) {
+func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	id := r.URL.Query().Get("id")
 
-	var BowlDetails models.BowlingCareer
-	err := json.NewDecoder(r.Body).Decode(&BowlDetails)
+	var career models.Career
+	err := json.NewDecoder(r.Body).Decode(&career)
 	if err != nil {
 		fmt.Println("Error in decoding the body")
 		return
 	}
-	BowlDetails.P_ID = id
-	db.DB.Create(&BowlDetails)
+	career.P_ID = id
+	db.DB.Create(&career)
 
-	json.NewEncoder(w).Encode(&BowlDetails)
+	json.NewEncoder(w).Encode(&career)
 
 }

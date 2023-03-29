@@ -3,6 +3,7 @@ package controllers
 import (
 	db "cricHeros/Database"
 	models "cricHeros/Models"
+	u "cricHeros/Utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -23,7 +24,7 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(player)
+	u.Encode(w, &player)
 
 }
 
@@ -38,15 +39,7 @@ func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("Error in extracting the data from the database", err)
 		return
 	}
-	json.NewEncoder(w).Encode(&players)
-}
-
-func UpdatePlayerHandler(w http.ResponseWriter, r *http.Request) {
-
-}
-
-func UpdatePlayerScoreHandler(w http.ResponseWriter, r *http.Request) {
-
+	u.Encode(w, &players)
 }
 
 func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -59,20 +52,7 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	db.DB.Table("players").Where("p_id=?", id).Scan(&PlayerData.Player)
 
-	db.DB.Table("battings").Where("p_id=?", id).Scan(&PlayerData.Batting)
+	db.DB.Table("careers").Where("p_id=?", id).Scan(&PlayerData.Career)
 
-	db.DB.Table("bowlings").Where("p_id=?", id).Scan(&PlayerData.Bowling)
-
-	json.NewEncoder(w).Encode(&PlayerData)
-}
-func MakeCaptain(w http.ResponseWriter, r *http.Request) {
-	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
-	id := mp["id"]
-
-	var player models.Player
-	db.DB.Where("p_id=?", id).First(&player)
-	player.Is_Captain = true
-
-	db.DB.Where("p_id=?", id).Updates(&player)
+	u.Encode(w, &PlayerData)
 }

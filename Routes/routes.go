@@ -22,16 +22,19 @@ func Routes() {
 	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler)
 	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler)
 
-	//Batting career routes
-	mux.HandleFunc("/addBatting", c.AddBattingHandler)
-
-	//Bowling career routes
-	mux.HandleFunc("/addBowling", c.AddBowlingHandler)
+	//Career routes
+	mux.HandleFunc("/addCareer", c.AddCareerHandler)
 
 	//team routes
 	mux.HandleFunc("/createTeam", c.CreateTeamHandler)
 	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler)
 	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
 	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
+
+	//Authetication Routes
+	mux.HandleFunc("/register", c.RegisterHandler)
+
+	//score card routes
+	mux.HandleFunc("/addToScoreCard", c.ScorecardRecordHandler)
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))
 }
