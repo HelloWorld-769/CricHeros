@@ -31,10 +31,19 @@ func Routes() {
 	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
 	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
 
-	//Authetication Routes
+	//Authentication Handler
 	mux.HandleFunc("/register", c.RegisterHandler)
+	mux.HandleFunc("/login", c.LoginHandler)
+	mux.HandleFunc("/forgotPassword", c.ForgotPasswordHandler)
+	mux.HandleFunc("/resetPassword", c.ResetPasswordHandler)
+
+	//Match routes
+	mux.HandleFunc("/createMatch", c.CreateMatchHandler)
+	mux.HandleFunc("/showMatch", c.ShowMatchHandler)
+	mux.HandleFunc("/endMatch", c.EndMatchHandler)
 
 	//score card routes
 	mux.HandleFunc("/addToScoreCard", c.ScorecardRecordHandler)
+
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))
 }

@@ -21,7 +21,7 @@ func Connect() error {
 		return err
 	}
 	DB = db
-	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credentials{}, &models.Balls{}, &models.ScoreCard{})
+	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credential{}, &models.Balls{}, &models.ScoreCard{})
 	if err != nil {
 		fmt.Println("Error in creating the tables..")
 		return err

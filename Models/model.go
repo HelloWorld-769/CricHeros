@@ -1,13 +1,20 @@
 package models
 
+import (
+	"github.com/golang-jwt/jwt/v4"
+	"gorm.io/gorm"
+)
+
 type Response struct {
 	Player Player
 	Career Career
+	gorm.Model
 }
 type Player struct {
-	P_ID     string `json:"player_id" gorm:"default:uuid_generate_v4();primaryKey"`
-	P_Name   string `json:"player_name"`
-	MPlayed  int64  `json:"matches_played"`
+	gorm.Model
+	P_ID   string `json:"player_id" gorm:"default:uuid_generate_v4();primaryKey"`
+	P_Name string `json:"player_name"`
+
 	P_Age    int64  `json:"player_age"`
 	JerseyNo int64  `json:"jersey_no"`
 	PhoneNo  string `json:"phone_no"`
@@ -15,32 +22,36 @@ type Player struct {
 }
 
 type TeamList struct {
+	gorm.Model
 	P_ID string `json:"p_id"`
 	T_ID string `json:"t_id"`
 }
 type Career struct {
 	P_ID       string  `json:"player_id"`
-	IngBat     int64   `json:"inning_bat"`
+	MPlayed    int64   `json:"matches_played"`
 	RunScored  int64   `json:"run_scored"`
 	HScored    int64   `json:"highest_score"` //high score
 	AvgScore   float64 `json:"average_score"`
 	BallsFaced int64   `json:"balls_faced"`
-	BatSR      float64 `json:"bat_sr"` //batting strike rate
-	Fifites    int64   `json:"fifties"`
-	Hundreds   int64   `json:"hundreds"`
-	Fours      int64   `json:"fours"`
-	Sixes      int64   `json:"sixes"`
-	IngBowl    int64   `json:"inning_bowl"`
-	BBowl      int64   `json:"balls_bowled"` //Balls Bowled
-	RConced    int64   `json:"runs_conced"`  //Runs Conceded
-	Wickets    int64   `json:"wickets"`
-	BowlAvg    int64   `json:"bowling_average"`
-	BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
-	Economy    float64 `json:"economy"`
+	//	BatSR      float64 `json:"bat_sr"` //batting strike rate
+	Fifites  int64 `json:"fifties"`
+	Hundreds int64 `json:"hundreds"`
+	Fours    int64 `json:"fours"`
+	Sixes    int64 `json:"sixes"`
+	BBowl    int64 `json:"balls_bowled"` //Balls Bowled
+	RConced  int64 `json:"runs_conced"`  //Runs Conceded
+	Wickets  int64 `json:"wickets"`
+	BowlAvg  int64 `json:"bowling_average"`
+	//BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
+	Economy float64 `json:"economy"`
+
+	gorm.Model
 }
 type MatchRecord struct {
 	M_ID string
 	S_ID string
+
+	gorm.Model
 }
 type Match struct {
 	M_ID   string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
@@ -51,6 +62,8 @@ type Match struct {
 	Venue  string
 	Text   string `json:"text"` //who won the match/
 	Status string `json:"status" gorm:"default:active"`
+
+	gorm.Model
 }
 
 type Team struct {
@@ -60,6 +73,8 @@ type Team struct {
 	T_Captain string `json:"team_captain"`
 	T_Type    string `json:"team_type"`
 	P_ID      string `json:"player_id"`
+
+	gorm.Model
 }
 
 type ScoreCard struct {
@@ -79,22 +94,34 @@ type ScoreCard struct {
 	WD        int64   `json:"wide_balls"`
 	Eco       float64 `json:"economy"`
 	IsOut     string  `json:"is_out" gorm:"default:not_out"`
+
+	gorm.Model
 }
 type Balls struct {
-	M_ID     string
-	P_ID     string
-	BallType string
-	Runs     int64  //runs on that particular ball
-	IsValid  string `json:"is_valid"`
-	Over     float64
+	B_ID      string `json:"ball_id" gorm:"default:uuid_generate_v4()"`
+	M_ID      string
+	P_ID      string
+	BallType  string
+	Runs      int64  //runs on that particular ball
+	IsValid   string `json:"is_valid"`
+	Over      float64
+	BallCount int64
+	gorm.Model
 }
-type Credentials struct {
+type Credential struct {
 	User_ID  string `json:"user_id" gorm:"default:uuid_generate_v4()"`
 	Username string `json:"username"`
 	PhoneNo  string `json:"phone_no"`
+	Password string `json:"password"`
+	gorm.Model
 }
 
 type Err struct {
 	Message    string
 	StatusCode int64
+}
+type Claims struct {
+	UserId   string
+	Username string `json:"user_id"`
+	jwt.RegisteredClaims
 }

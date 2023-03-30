@@ -6,6 +6,7 @@ import (
 	u "cricHeros/Utils"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -32,4 +33,17 @@ func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
 	var matches []models.Match
 	db.DB.Find(&matches)
 	u.Encode(w, &matches)
+}
+
+func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("End match handler called..."))
+
+	var mp = make(map[string]string)
+	json.NewDecoder(r.Body).Decode(&mp)
+	var records []models.ScoreCard
+	db.DB.Where("s_id", mp["scorecard_id"]).Find(&records)
+
+	fmt.Println("records in scorecard is:", records)
+
 }
