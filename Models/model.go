@@ -34,14 +34,15 @@ type Career struct {
 	AvgScore   float64 `json:"average_score"`
 	BallsFaced int64   `json:"balls_faced"`
 	//	BatSR      float64 `json:"bat_sr"` //batting strike rate
-	Fifites  int64 `json:"fifties"`
-	Hundreds int64 `json:"hundreds"`
-	Fours    int64 `json:"fours"`
-	Sixes    int64 `json:"sixes"`
-	BBowl    int64 `json:"balls_bowled"` //Balls Bowled
-	RConced  int64 `json:"runs_conced"`  //Runs Conceded
-	Wickets  int64 `json:"wickets"`
-	BowlAvg  int64 `json:"bowling_average"`
+	Fifites     int64   `json:"fifties"`
+	Hundreds    int64   `json:"hundreds"`
+	TwoHundreds int64   `json:"two_hundreds"`
+	Fours       int64   `json:"fours"`
+	Sixes       int64   `json:"sixes"`
+	BBowl       int64   `json:"balls_bowled"` //Balls Bowled
+	RConced     int64   `json:"runs_conced"`  //Runs Conceded
+	Wickets     int64   `json:"wickets"`
+	BowlAvg     float64 `json:"bowling_average"`
 	//BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
 	Economy float64 `json:"economy"`
 
@@ -56,10 +57,10 @@ type MatchRecord struct {
 type Match struct {
 	M_ID   string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
 	S_ID   string `json:"scorecard_id" gorm:"default:uuid_generate_v4()"` //scorecard related to it
-	T1_ID  string
-	T2_ID  string
-	Date   string
-	Venue  string
+	T1_ID  string `json:"team1_id"`
+	T2_ID  string `json:"team2_id"`
+	Date   string `json:"date"`
+	Venue  string `json:"venue"`
 	Text   string `json:"text"` //who won the match/
 	Status string `json:"status" gorm:"default:active"`
 

@@ -7,16 +7,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"net/http"
 
 	"gorm.io/gorm"
 )
-
-func roundFloat(val float64, precision uint) float64 {
-	ratio := math.Pow(10, float64(precision))
-	return math.Round(val*ratio) / ratio
-}
 
 func getOvers(player_id string) int64 {
 	var count int64 = 0
@@ -105,7 +99,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			if mp["ball_type"] == "wicket" {
 				batsmenRecord.IsOut = "Out"
 			}
-			batsmenRecord.SR = roundFloat((float64(batsmenRecord.RunScored)/float64(batsmenRecord.BPlayed))*100, 3)
+			batsmenRecord.SR = u.RoundFloat((float64(batsmenRecord.RunScored)/float64(batsmenRecord.BPlayed))*100, 3)
 			db.DB.Create(&batsmenRecord)
 			u.Encode(w, &batsmenRecord)
 		} else {
@@ -123,7 +117,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			if mp["ball_type"] == "wicket" {
 				existRecord.IsOut = "Out"
 			}
-			existRecord.SR = roundFloat(float64(existRecord.RunScored)/float64(existRecord.BPlayed), 3)
+			existRecord.SR = u.RoundFloat(float64(existRecord.RunScored)/float64(existRecord.BPlayed), 3)
 			db.DB.Where("p_id=?", mp["batsmen"]).Updates(&existRecord)
 			u.Encode(w, &existRecord)
 		}
@@ -174,5 +168,9 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowErr("Bowler not selected", 400, w)
 		return
 	}
+
+}
+
+func ShowScoreCard(w http.ResponseWriter, r *http.Request) {
 
 }
