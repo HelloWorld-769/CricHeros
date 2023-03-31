@@ -15,7 +15,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := r.URL.Query().Get("id")
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var team models.Team
 	json.NewDecoder(r.Body).Decode(&team)
 	team.U_ID = id
@@ -23,7 +23,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&team)
 }
 func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var mp = make(map[string][]string)
 
 	json.NewDecoder(r.Body).Decode(&mp)
@@ -53,7 +53,7 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
 	id := mp["id"]
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var teams []models.Team
 	query := "SELECT DISTINCT t_id,t_name,t_captain,t_type FROM teams where u_id=?"
 	db.DB.Raw(query, id).Scan(&teams)
@@ -66,7 +66,7 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
 	t_id := mp["team_id"]
@@ -86,7 +86,7 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	id := r.URL.Query().Get("id")
 	query := "DELETE FROM teams WHERE t_id=?;"
 	err := db.DB.Raw(query, id).Error

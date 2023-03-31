@@ -3,6 +3,7 @@ package controllers
 import (
 	db "cricHeros/Database"
 	models "cricHeros/Models"
+	u "cricHeros/Utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -18,7 +19,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var credential models.Credential
 	json.NewDecoder(r.Body).Decode(&credential)
 
@@ -94,7 +95,7 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	tokenString := r.URL.Query().Get("token")
 
 	claims := &models.Claims{}

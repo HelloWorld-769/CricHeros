@@ -10,7 +10,7 @@ import (
 )
 
 func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
@@ -31,14 +31,15 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 // function to add players batting career
 func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
 
-	//not complete
-	w.Header().Set("Content-Type", "application/json")
+	//teams mapping left
+	u.SetHeader(w)
 	var players []models.Player
 	err := db.DB.Find(&players).Error
 	if err != nil {
 		fmt.Println("Error in extracting the data from the database", err)
 		return
 	}
+
 	u.Encode(w, &players)
 }
 
@@ -53,6 +54,8 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 	db.DB.Table("players").Where("p_id=?", id).Scan(&PlayerData.Player)
 
 	db.DB.Table("careers").Where("p_id=?", id).Scan(&PlayerData.Career)
+
+	db.DB.Table("team_lists").Where("p_id=?", id).Scan(&PlayerData.Teams)
 
 	u.Encode(w, &PlayerData)
 }

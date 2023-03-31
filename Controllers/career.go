@@ -3,6 +3,7 @@ package controllers
 import (
 	db "cricHeros/Database"
 	models "cricHeros/Models"
+	u "cricHeros/Utils"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 
 // function to add players batting career
 func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	id := r.URL.Query().Get("id")
 
 	var career models.Career

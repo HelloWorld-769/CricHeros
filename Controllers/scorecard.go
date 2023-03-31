@@ -71,7 +71,7 @@ func AddBallRecordHandler(mp map[string]interface{}) {
 	db.DB.Create(&ball)
 }
 func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+	u.SetHeader(w)
 	var mp = make(map[string]interface{})
 	json.NewDecoder(r.Body).Decode(&mp)
 
@@ -172,5 +172,13 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ShowScoreCard(w http.ResponseWriter, r *http.Request) {
+	u.SetHeader(w)
+	var mp = make(map[string]string)
+	json.NewDecoder(r.Body).Decode(&mp)
 
+	var matchMapping models.MatchRecord
+	db.DB.Find("m_id=?", mp["match_id"]).First(&matchMapping)
+
+	var matchScoreRecord []models.ScoreCard
+	db.DB.Where("s_id=?", matchMapping.S_ID).Find(&matchScoreRecord)
 }

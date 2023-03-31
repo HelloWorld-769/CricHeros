@@ -12,6 +12,7 @@ import (
 )
 
 func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
+	u.SetHeader(w)
 	var match models.Match
 	json.NewDecoder(r.Body).Decode(&match)
 	var count int64
@@ -29,20 +30,25 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 		M_ID: match.M_ID,
 		S_ID: match.S_ID,
 	}
+	// tossRecord := models.Toss{
+	// 	M_ID:  match.M_ID,
+	// 	T1_ID: match.T1_ID,
+	// 	T2_ID: match.T2_ID,
+	// }
 	db.DB.Create(&matchRecord)
+	//db.DB.Create(&tossRecord)
 
 	u.Encode(w, &match)
 }
 func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
+	u.SetHeader(w)
 	var matches []models.Match
 	db.DB.Find(&matches)
 	u.Encode(w, &matches)
 }
 
 func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Write([]byte("End match handler called..."))
-
+	u.SetHeader(w)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
 	var matchData models.Match

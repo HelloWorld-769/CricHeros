@@ -24,3 +24,7 @@ func RoundFloat(val float64, precision uint) float64 {
 func Encode(w http.ResponseWriter, data interface{}) {
 	json.NewEncoder(w).Encode(&data)
 }
+
+func SetHeader(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json")
+}

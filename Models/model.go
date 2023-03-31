@@ -8,6 +8,7 @@ import (
 type Response struct {
 	Player Player
 	Career Career
+	Teams  TeamList
 	gorm.Model
 }
 type Player struct {
@@ -125,4 +126,18 @@ type Claims struct {
 	UserId   string
 	Username string `json:"user_id"`
 	jwt.RegisteredClaims
+}
+
+type Inning struct {
+	T_ID   string
+	TScore int64
+}
+
+type Toss struct {
+	Toss_ID  string `json:"toss_id" gorm:"default:uuid_generate_v4()"`
+	M_ID     string `json:"match_id"`
+	T1_ID    string `json:"head_team"`
+	T2_ID    string `json:"tail_team"`
+	Decision string `json:"decision"`
+	TossWon  string `json:"toss_won"`
 }

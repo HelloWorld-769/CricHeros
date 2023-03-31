@@ -45,5 +45,13 @@ func Routes() {
 	//score card routes
 	mux.HandleFunc("/addToScoreCard", c.ScorecardRecordHandler)
 
+	//Innings routes
+	mux.HandleFunc("/endInning", c.EndInningHandler)
+
+	//Toss Routes
+	mux.HandleFunc("/tossResult", c.TossResultHandler)
+	mux.HandleFunc("/DecisionUpdate", c.DecisionUpdateHandler)
+
+	//Listening to the server
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))
 }
