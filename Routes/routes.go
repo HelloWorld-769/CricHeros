@@ -3,6 +3,7 @@ package routes
 import (
 	c "cricHeros/Controllers"
 	db "cricHeros/Database"
+	socket "cricHeros/Socket"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,6 +17,9 @@ func Routes() {
 	if err != nil {
 		panic(err)
 	}
+
+	socketServer := socket.SocketInit()
+	defer socketServer.Close()
 
 	//Player routes
 	mux.HandleFunc("/createPlayer", c.AddPlayerHandler)
@@ -51,6 +55,8 @@ func Routes() {
 	//Toss Routes
 	mux.HandleFunc("/tossResult", c.TossResultHandler)
 	mux.HandleFunc("/DecisionUpdate", c.DecisionUpdateHandler)
+
+	mux.Handle("/socket.io/", socketServer)
 
 	//Listening to the server
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))

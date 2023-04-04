@@ -25,7 +25,6 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	tossRes := getRandomResult()
 	var team_id string
 	if tossRes == "Head" {
-		team_id = toss.T1_ID
 	} else {
 		team_id = toss.T2_ID
 	}

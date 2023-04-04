@@ -56,14 +56,15 @@ type MatchRecord struct {
 	gorm.Model
 }
 type Match struct {
-	M_ID   string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
-	S_ID   string `json:"scorecard_id" gorm:"default:uuid_generate_v4()"` //scorecard related to it
-	T1_ID  string `json:"team1_id"`
-	T2_ID  string `json:"team2_id"`
-	Date   string `json:"date"`
-	Venue  string `json:"venue"`
-	Text   string `json:"text"` //who won the match/
-	Status string `json:"status" gorm:"default:active"`
+	M_ID    string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
+	S_ID    string `json:"scorecard_id" gorm:"default:uuid_generate_v4()"` //scorecard related to it
+	T1_ID   string `json:"team1_id"`
+	T2_ID   string `json:"team2_id"`
+	Room_ID string `json:"room_id" gorm:"default:uuid_generate_v4()"`
+	Date    string `json:"date"`
+	Venue   string `json:"venue"`
+	Text    string `json:"text"` //who won the match/
+	Status  string `json:"status" gorm:"default:active"`
 
 	gorm.Model
 }
@@ -100,7 +101,6 @@ type ScoreCard struct {
 	gorm.Model
 }
 type Balls struct {
-	B_ID      string `json:"ball_id" gorm:"default:uuid_generate_v4()"`
 	M_ID      string
 	P_ID      string
 	BallType  string
