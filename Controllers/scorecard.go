@@ -32,33 +32,41 @@ func getMaidenOvers(player_id string) int64 {
 	return 0
 }
 
+// @Description stores players info in scorecard
+// @Accept json
+// @Success 200 {object} models.ScoreCard
+// @Param details body models.CardData true "ScoreCard details"
+// @Tags Scorecard
+// @Router /addToScoreCard [post]
 func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	var mp = make(map[string]interface{})
-	json.NewDecoder(r.Body).Decode(&mp)
+	EnableCors(&w)
+	//var mp = make(map[string]interface{})
+	var scoreCardData models.CardData
+	json.NewDecoder(r.Body).Decode(&scoreCardData)
 
-	AddBallRecordHandler(mp)
+	AddBallRecordHandler(scoreCardData)
 	// creating or updating reocrd for bowler
-	if val, ok := mp["batsmen"].(string); ok {
+	if scoreCardData.Batsmen != "" {
 		var existRecord models.ScoreCard
-		err := db.DB.Where("p_id=?", val).First(&existRecord).Error
+		err := db.DB.Where("p_id=?", scoreCardData.Batsmen).First(&existRecord).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 
 			var batsmenRecord models.ScoreCard
 			batsmenRecord.PType = "batsmen"
-			batsmenRecord.S_ID = mp["scorecard_id"].(string)
-			batsmenRecord.P_ID = val
-			batsmenRecord.RunScored = int64(mp["runs"].(float64))
-			if mp["runs"].(float64) == 4 {
+			batsmenRecord.S_ID = scoreCardData.S_ID
+			batsmenRecord.P_ID = scoreCardData.Batsmen
+			batsmenRecord.RunScored = scoreCardData.Runs
+			if scoreCardData.Runs == 4 {
 				batsmenRecord.Fours += 1
 			}
-			if mp["runs"].(float64) == 6 {
+			if scoreCardData.Runs == 6 {
 				batsmenRecord.Sixes += 1
 			}
-			if mp["ball_type"] == "normal" {
+			if scoreCardData.Ball_Type == "normal" {
 				batsmenRecord.BPlayed += 1
 			}
-			if mp["ball_type"] == "wicket" {
+			if scoreCardData.Ball_Type == "wicket" {
 				batsmenRecord.IsOut = "Out"
 			}
 			batsmenRecord.SR = u.RoundFloat((float64(batsmenRecord.RunScored)/float64(batsmenRecord.BPlayed))*100, 3)
@@ -66,21 +74,21 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			u.Encode(w, &batsmenRecord)
 		} else {
 			//update the scorecard for that user
-			existRecord.RunScored += int64(mp["runs"].(float64))
-			if mp["runs"].(float64) == 4 {
+			existRecord.RunScored = existRecord.RunScored - scoreCardData.PrevRuns + scoreCardData.Runs
+			if scoreCardData.Runs == 4 {
 				existRecord.Fours += 1
 			}
-			if mp["runs"].(float64) == 6 {
+			if scoreCardData.Runs == 6 {
 				existRecord.Sixes += 1
 			}
-			if mp["ball_type"] == "normal" {
+			if scoreCardData.Ball_Type == "normal" {
 				existRecord.BPlayed += 1
 			}
-			if mp["ball_type"] == "wicket" {
+			if scoreCardData.Ball_Type == "wicket" {
 				existRecord.IsOut = "Out"
 			}
 			existRecord.SR = u.RoundFloat(float64(existRecord.RunScored)/float64(existRecord.BPlayed), 3)
-			db.DB.Where("p_id=?", mp["batsmen"]).Updates(&existRecord)
+			db.DB.Where("p_id=?", scoreCardData.Batsmen).Updates(&existRecord)
 			u.Encode(w, &existRecord)
 		}
 	} else {
@@ -89,40 +97,40 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// creating or updating record for bowler
-	if val, ok := mp["bowler"].(string); ok {
+	if scoreCardData.Baller != "" {
 		var existRecord models.ScoreCard
-		err := db.DB.Where("p_id=?", val).First(&existRecord).Error
+		err := db.DB.Where("p_id=?", scoreCardData.Baller).First(&existRecord).Error
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			var bowlerRecord models.ScoreCard
 			bowlerRecord.PType = "bowler"
-			bowlerRecord.S_ID = mp["scorecard_id"].(string)
-			bowlerRecord.P_ID = val
-			bowlerRecord.RunGiven = int64(mp["runs"].(float64))
-			if mp["ball_type"] == "no_ball" {
+			bowlerRecord.S_ID = scoreCardData.S_ID
+			bowlerRecord.P_ID = scoreCardData.Baller
+			bowlerRecord.RunGiven = scoreCardData.Runs
+			if scoreCardData.Ball_Type == "no_ball" {
 				bowlerRecord.NB += 1
-			} else if mp["ball_type"] == "wicket" {
+			} else if scoreCardData.Ball_Type == "wicket" {
 				bowlerRecord.Wickets += 1
-			} else if mp["ball_type"] == "wide_ball" {
+			} else if scoreCardData.Ball_Type == "wide_ball" {
 				bowlerRecord.WD += 1
 			}
 			db.DB.Create(&bowlerRecord)
 		} else {
-			existRecord.RunGiven += int64(mp["runs"].(float64))
-			if mp["ball_type"] == "no_ball" {
+			existRecord.RunGiven += scoreCardData.Runs
+			if scoreCardData.Ball_Type == "no_ball" {
 				existRecord.NB += 1
-			} else if mp["ball_type"] == "wicket" {
+			} else if scoreCardData.Ball_Type == "wicket" {
 				existRecord.Wickets += 1
-			} else if mp["ball_type"] == "wide_ball" {
+			} else if scoreCardData.Ball_Type == "wide_ball" {
 				existRecord.WD += 1
 			}
-			if getOvers(mp["bowler"].(string)) != 0 {
-				existRecord.OBowled = getOvers(mp["bowler"].(string))
+			if getOvers(scoreCardData.Baller) != 0 {
+				existRecord.OBowled = getOvers(scoreCardData.Baller)
 			}
-			if getMaidenOvers(mp["bowler"].(string)) != 0 {
-				existRecord.MOvers = getMaidenOvers(mp["bowler"].(string))
+			if getMaidenOvers(scoreCardData.Baller) != 0 {
+				existRecord.MOvers = getMaidenOvers(scoreCardData.Baller)
 			}
-			//existRecord.Eco=float64(existRecord.RunGiven)/float64(existRecord.OBowled)
-			db.DB.Where("p_id=?", mp["bowler"].(string)).Updates(&existRecord)
+			existRecord.Eco = float64(existRecord.RunGiven) / float64(existRecord.OBowled)
+			db.DB.Where("p_id=?", scoreCardData.Baller).Updates(&existRecord)
 			fmt.Fprintln(w, "Baller record is :")
 			u.Encode(w, &existRecord)
 		}
@@ -133,8 +141,15 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func ShowScoreCard(w http.ResponseWriter, r *http.Request) {
+// @Description Shows the score card for the current matcha
+// @Accept json
+// @Success 200 {object} models.ScoreCard
+// @Param match_id body object true "Id of the match whose scoredcard is to be viewed"
+// @Tags Scorecard
+// @Router /showScoreCard [post]
+func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
+	EnableCors(&w)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
 
@@ -143,4 +158,6 @@ func ShowScoreCard(w http.ResponseWriter, r *http.Request) {
 
 	var matchScoreRecord []models.ScoreCard
 	db.DB.Where("s_id=?", matchMapping.S_ID).Find(&matchScoreRecord)
+
+	u.Encode(w, matchScoreRecord)
 }

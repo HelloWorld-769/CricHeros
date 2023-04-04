@@ -8,6 +8,10 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// @title Cric Heros API
+// @version 1.0.0
+// @description API Documentation for Cric Heros
+// @host localhost:8000
 func main() {
 	envErr := godotenv.Load(".env")
 	if envErr != nil {

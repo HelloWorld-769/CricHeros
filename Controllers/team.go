@@ -9,6 +9,14 @@ import (
 	"net/http"
 )
 
+// @Description Creates a team
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Team
+// @Param id query string true "ID of the user"
+// @Param TeamDetails body models.Team true "Details of the team"
+// @Tags Team
+// @Router /createTeam [post]
 func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -22,6 +30,14 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	db.DB.Create(&team)
 	json.NewEncoder(w).Encode(&team)
 }
+
+// @Description Add player to team
+// @Accept json
+// @Success 200
+// @Param id query string true "ID of the team"
+// @Param player body []string true "Array of players"
+// @Tags Team
+// @Router /addPlayertoTeam [post]
 func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	var mp = make(map[string][]string)
@@ -44,6 +60,14 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 	db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id)
 
 }
+
+// @Description Shows the list of teams
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Team
+// @Param id query string true "ID of the User"
+// @Tags Team
+// @Router /showTeams [get]
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
@@ -61,6 +85,14 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(teams)
 }
 
+// @Description Shows the list of teams
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Team
+// @Success 200 {object} models.Player
+// @Param  team_id body string  true "ID of the team".
+// @Tags Team
+// @Router /showTeamByID [post]
 func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -85,8 +117,18 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Description Delete the team
+// @Accept json
+// @Produces json
+// @Success 200 {string} Team deleted successfull
+// @Failure 500 {string}  Unable to delete the tea
+// @Param id query string true "ID of the team".
+// @Param user_id body object true "ID of the user"
+// @Tags Team
+// @Router /deleteTeamByID [delete]
 func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
+	EnableCors(&w)
 	id := r.URL.Query().Get("id")
 	query := "DELETE FROM teams WHERE t_id=?;"
 	err := db.DB.Raw(query, id).Error

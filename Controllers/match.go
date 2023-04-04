@@ -11,7 +11,15 @@ import (
 	"time"
 )
 
+// @Description Create the match between the teams
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Match
+// @Param match body models.Match true "Match details"
+// @Tags Match
+// @Router /createMatch [post]
 func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
+	EnableCors(&w)
 	u.SetHeader(w)
 	var match models.Match
 	json.NewDecoder(r.Body).Decode(&match)
@@ -30,32 +38,43 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 		M_ID: match.M_ID,
 		S_ID: match.S_ID,
 	}
-	// tossRecord := models.Toss{
-	// 	M_ID:  match.M_ID,
-	// 	T1_ID: match.T1_ID,
-	// 	T2_ID: match.T2_ID,
-	// }
 	db.DB.Create(&matchRecord)
-	//db.DB.Create(&tossRecord)
 
 	u.Encode(w, &match)
 }
+
+// @Description Show the list of matches
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Match
+// @Tags Match
+// @Router /showMatch [post]
 func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
+	EnableCors(&w)
 	u.SetHeader(w)
 	var matches []models.Match
 	db.DB.Find(&matches)
 	u.Encode(w, &matches)
 }
 
+// @Description Ends the match and updates the scorecard of every player
+// @Accept json
+// @Success 200 {object} models.Match
+// @Param match_id body object true "Id of the match to end"
+// @Tags Match
+// @Router /endMatch [post]
 func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
+	EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)
 	var matchData models.Match
 	db.DB.Where("s_id", mp["match_id"]).Find(&matchData)
 	matchData.Status = "Completed"
+	var scorecard models.MatchRecord
+	db.DB.Where("m_id=?", mp["match_id"]).First(&scorecard)
 	var records []models.ScoreCard
-	db.DB.Where("s_id", mp["scorecard_id"]).Find(&records)
+	db.DB.Where("s_id", scorecard.S_ID).Find(&records)
 	for _, record := range records {
 		//fmt.Println("Player id is:", record.P_ID)
 		var pCareer models.Career

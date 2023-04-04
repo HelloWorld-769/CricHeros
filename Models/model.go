@@ -101,14 +101,25 @@ type ScoreCard struct {
 	gorm.Model
 }
 type Balls struct {
-	M_ID      string
-	P_ID      string
-	BallType  string
-	Runs      int64  //runs on that particular ball
-	IsValid   string `json:"is_valid"`
-	Over      float64
-	BallCount int64
+	B_ID      string  `json:"ball_id" gorm:"default:uuid_generate_v4()"`
+	M_ID      string  `json:"match_id"`
+	P_ID      string  `json:"player_id"`
+	BallType  string  `json:"ball_type"`
+	Runs      int64   `json:"runs"` //runs on that particular ball
+	IsValid   string  `json:"is_valid"`
+	Over      float64 `json:"over"`
+	BallCount int64   `json:"ball_count"`
 	gorm.Model
+}
+
+type CardData struct {
+	M_ID      string `json:"match_id"`
+	Batsmen   string `json:"batsmen"`
+	S_ID      string `json:"scorecard_id"`
+	Baller    string `json:"baller"`
+	Runs      int64  `json:"runs"`
+	Ball_Type string `json:"ball_type"`
+	PrevRuns  int64  `json:"prev_runs"`
 }
 type Credential struct {
 	User_ID  string `json:"user_id" gorm:"default:uuid_generate_v4()"`

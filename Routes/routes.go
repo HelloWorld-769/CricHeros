@@ -34,6 +34,7 @@ func Routes() {
 	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler)
 	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
 	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
+	mux.HandleFunc("/deleteTeamByID", c.DeleteTeamHandler)
 
 	//Authentication Handler
 	mux.HandleFunc("/register", c.RegisterHandler)
@@ -56,7 +57,15 @@ func Routes() {
 	mux.HandleFunc("/tossResult", c.TossResultHandler)
 	mux.HandleFunc("/DecisionUpdate", c.DecisionUpdateHandler)
 
+	//Socket Server
 	mux.Handle("/socket.io/", socketServer)
+	// swaggerUI := http.FileServer(http.Dir("./docs/swagger"))
+	// mux.Handle("/swagger/", http.StripPrefix("/swagger/", swaggerUI))
+
+	//Ball Handler
+	mux.HandleFunc("/ballUpdate", c.UpdateBallRecord)
+
+	// mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
 
 	//Listening to the server
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))

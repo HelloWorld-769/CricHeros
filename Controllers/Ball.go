@@ -3,20 +3,21 @@ package controllers
 import (
 	db "cricHeros/Database"
 	models "cricHeros/Models"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"net/http"
 
 	"gorm.io/gorm"
 )
 
-func AddBallRecordHandler(mp map[string]interface{}) {
-	// var mp = make(map[string]interface{})
-	// json.NewDecoder(r.Body).Decode(&mp)
-	//fmt.Println("map is :", mp)
+func AddBallRecordHandler(scoreCardData models.CardData) {
+
 	var ball models.Balls
-	ball.M_ID = mp["match_id"].(string)
-	ball.BallType = mp["ball_type"].(string)
-	ball.Runs = int64(mp["runs"].(float64))
-	ball.P_ID = mp["bowler"].(string)
+	ball.M_ID = scoreCardData.M_ID
+	ball.BallType = scoreCardData.Ball_Type
+	ball.Runs = scoreCardData.Runs
+	ball.P_ID = scoreCardData.Baller
 
 	var lastBallRecord models.Balls
 	err := db.DB.Select("over", "ball_count").Last(&lastBallRecord).Error
@@ -25,11 +26,11 @@ func AddBallRecordHandler(mp map[string]interface{}) {
 
 		ball.BallCount = 1
 		ball.Over = 1
-		if mp["ball_type"].(string) == "normal" || mp["ball_type"].(string) == "wicket" {
+		if scoreCardData.Ball_Type == "normal" || scoreCardData.Ball_Type == "wicket" {
 			ball.IsValid = "valid"
 		}
 	} else {
-		if mp["ball_type"].(string) == "normal" || mp["ball_type"].(string) == "wicket" {
+		if scoreCardData.Ball_Type == "normal" || scoreCardData.Ball_Type == "wicket" {
 			ball.IsValid = "valid"
 			if lastBallRecord.BallCount == 6 {
 				ball.Over = lastBallRecord.Over + 1
@@ -46,4 +47,21 @@ func AddBallRecordHandler(mp map[string]interface{}) {
 	}
 
 	db.DB.Create(&ball)
+}
+
+// @Description Update the ball
+// @Accept json
+// @Produce json
+// @Tags Ball
+// @Param id query string true "Id of the ball"
+// @Success 200 {object} models.Balls
+// @Router /ballUpdate [put]
+func UpdateBallRecord(w http.ResponseWriter, r *http.Request) {
+	ball_id := r.URL.Query().Get("id")
+	var ballRecord models.Balls
+	json.NewDecoder(r.Body).Decode(&ballRecord)
+
+	db.DB.Where("b_id=?", ball_id).Updates(&ballRecord)
+	fmt.Println("Ball Updated Sucessfully")
+	json.NewEncoder(w).Encode(&ballRecord)
 }

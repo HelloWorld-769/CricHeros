@@ -8,7 +8,14 @@ import (
 	"net/http"
 )
 
+// @Description Ends the current team innings
+// @Accept json
+// @Param team_id body object true "Id of the team to end its inning"
+// @Tags Inning
+// @Success 200
+// @Router /endInning [post]
 func EndInningHandler(w http.ResponseWriter, r *http.Request) {
+	EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
 	json.NewDecoder(r.Body).Decode(&mp)

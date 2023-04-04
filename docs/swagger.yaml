@@ -1,0 +1,698 @@
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  models.Balls:
+    properties:
+      ball_count:
+        type: integer
+      ball_id:
+        type: string
+      ball_type:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      is_valid:
+        type: string
+      match_id:
+        type: string
+      over:
+        type: number
+      player_id:
+        type: string
+      runs:
+        description: runs on that particular ball
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  models.CardData:
+    properties:
+      ball_type:
+        type: string
+      baller:
+        type: string
+      batsmen:
+        type: string
+      match_id:
+        type: string
+      prev_runs:
+        type: integer
+      runs:
+        type: integer
+      scorecard_id:
+        type: string
+    type: object
+  models.Career:
+    properties:
+      average_score:
+        type: number
+      balls_bowled:
+        description: Balls Bowled
+        type: integer
+      balls_faced:
+        type: integer
+      bowling_average:
+        type: number
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      economy:
+        description: BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
+        type: number
+      fifties:
+        description: BatSR      float64 `json:"bat_sr"` //batting strike rate
+        type: integer
+      fours:
+        type: integer
+      highest_score:
+        description: high score
+        type: integer
+      hundreds:
+        type: integer
+      id:
+        type: integer
+      matches_played:
+        type: integer
+      player_id:
+        type: string
+      run_scored:
+        type: integer
+      runs_conced:
+        description: Runs Conceded
+        type: integer
+      sixes:
+        type: integer
+      two_hundreds:
+        type: integer
+      updatedAt:
+        type: string
+      wickets:
+        type: integer
+    type: object
+  models.Credential:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      password:
+        type: string
+      phone_no:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.Match:
+    properties:
+      createdAt:
+        type: string
+      date:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      match_id:
+        type: string
+      room_id:
+        type: string
+      scorecard_id:
+        description: scorecard related to it
+        type: string
+      status:
+        type: string
+      team1_id:
+        type: string
+      team2_id:
+        type: string
+      text:
+        description: who won the match/
+        type: string
+      updatedAt:
+        type: string
+      venue:
+        type: string
+    type: object
+  models.Player:
+    properties:
+      country:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      jersey_no:
+        type: integer
+      phone_no:
+        type: string
+      player_age:
+        type: integer
+      player_id:
+        type: string
+      player_name:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.Response:
+    properties:
+      career:
+        $ref: '#/definitions/models.Career'
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      player:
+        $ref: '#/definitions/models.Player'
+      teams:
+        $ref: '#/definitions/models.TeamList'
+      updatedAt:
+        type: string
+    type: object
+  models.ScoreCard:
+    properties:
+      balls_played:
+        type: integer
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      economy:
+        type: number
+      fours:
+        type: integer
+      id:
+        type: integer
+      is_out:
+        type: string
+      maiden_overs:
+        type: integer
+      no_balls:
+        type: integer
+      overs_bowled:
+        type: integer
+      player_id:
+        type: string
+      player_type:
+        type: string
+      runScored:
+        type: integer
+      runs_given:
+        type: integer
+      scorecard_id:
+        type: string
+      sixes:
+        type: integer
+      strike_rate:
+        type: number
+      updatedAt:
+        type: string
+      wickets:
+        type: integer
+      wide_balls:
+        type: integer
+    type: object
+  models.Team:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      player_id:
+        type: string
+      team_captain:
+        type: string
+      team_id:
+        type: string
+      team_name:
+        type: string
+      team_type:
+        type: string
+      updatedAt:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.TeamList:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      p_id:
+        type: string
+      t_id:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  models.Toss:
+    properties:
+      decision:
+        type: string
+      head_team:
+        type: string
+      match_id:
+        type: string
+      tail_team:
+        type: string
+      toss_id:
+        type: string
+      toss_won:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: API Documentation for Cric Heros
+  title: Cric Heros API
+  version: 1.0.0
+paths:
+  /DecisionUpdate:
+    put:
+      consumes:
+      - application/json
+      description: Updates the decison taken by the team after wining the toss
+      parameters:
+      - description: Descision Updated
+        in: body
+        name: toss
+        required: true
+        schema:
+          $ref: '#/definitions/models.Toss'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Toss'
+      tags:
+      - Toss
+  /addCareer:
+    post:
+      consumes:
+      - application/json
+      description: Add player career
+      parameters:
+      - description: Player ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Adds Player career
+        in: body
+        name: playerCareer
+        required: true
+        schema:
+          $ref: '#/definitions/models.Career'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Career'
+      tags:
+      - Player
+  /addPlayertoTeam:
+    post:
+      consumes:
+      - application/json
+      description: Add player to team
+      parameters:
+      - description: ID of the team
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Array of players
+        in: body
+        name: player
+        required: true
+        schema:
+          items:
+            type: string
+          type: array
+      responses:
+        "200":
+          description: OK
+      tags:
+      - Team
+  /addToScoreCard:
+    post:
+      consumes:
+      - application/json
+      description: stores players info in scorecard
+      parameters:
+      - description: ScoreCard details
+        in: body
+        name: details
+        required: true
+        schema:
+          $ref: '#/definitions/models.CardData'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ScoreCard'
+      tags:
+      - Scorecard
+  /ballUpdate:
+    post:
+      consumes:
+      - application/json
+      description: Update the ball
+      parameters:
+      - description: Id of the ball
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Balls'
+      tags:
+      - Ball
+  /createMatch:
+    post:
+      consumes:
+      - application/json
+      description: Create the match between the teams
+      parameters:
+      - description: Match details
+        in: body
+        name: match
+        required: true
+        schema:
+          $ref: '#/definitions/models.Match'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Match'
+      tags:
+      - Match
+  /createPlayer:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Player
+      parameters:
+      - description: Create Player
+        in: body
+        name: player
+        required: true
+        schema:
+          $ref: '#/definitions/models.Player'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Player'
+      tags:
+      - Player
+  /createTeam:
+    post:
+      consumes:
+      - application/json
+      description: Creates a team
+      parameters:
+      - description: ID of the user
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Details of the team
+        in: body
+        name: TeamDetails
+        required: true
+        schema:
+          $ref: '#/definitions/models.Team'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Team'
+      tags:
+      - Team
+  /deleteTeamByID:
+    delete:
+      consumes:
+      - application/json
+      description: Delete the team
+      parameters:
+      - description: ID of the team
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: ID of the user
+        in: body
+        name: user_id
+        required: true
+        schema:
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      tags:
+      - Team
+  /endInning:
+    post:
+      consumes:
+      - application/json
+      description: Ends the current team innings
+      parameters:
+      - description: Id of the team to end its inning
+        in: body
+        name: team_id
+        required: true
+        schema:
+          type: object
+      responses:
+        "200":
+          description: OK
+      tags:
+      - Inning
+  /endMatch:
+    post:
+      consumes:
+      - application/json
+      description: Ends the match and updates the scorecard of every player
+      parameters:
+      - description: Id of the match to end
+        in: body
+        name: match_id
+        required: true
+        schema:
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Match'
+      tags:
+      - Match
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login a user
+      parameters:
+      - description: Log in the user
+        in: body
+        name: UserDetails
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credential'
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      tags:
+      - Authentication
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user
+      parameters:
+      - description: Registers a user
+        in: body
+        name: UserDetails
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credential'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Credential'
+      tags:
+      - Authentication
+  /showMatch:
+    post:
+      consumes:
+      - application/json
+      description: Show the list of matches
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Match'
+      tags:
+      - Match
+  /showPlayer:
+    get:
+      consumes:
+      - application/json
+      description: Shows the list of all the player
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Player'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      tags:
+      - Player
+  /showPlayerID:
+    get:
+      consumes:
+      - application/json
+      description: Shows the list of all the player
+      parameters:
+      - description: ID of the player
+        in: body
+        name: id
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Player
+  /showScoreCard:
+    post:
+      consumes:
+      - application/json
+      description: Shows the score card for the current matcha
+      parameters:
+      - description: Id of the match whose scoredcard is to be viewed
+        in: body
+        name: match_id
+        required: true
+        schema:
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ScoreCard'
+      tags:
+      - Scorecard
+  /showTeamByID:
+    post:
+      consumes:
+      - application/json
+      description: Shows the list of teams
+      parameters:
+      - description: ID of the team
+        in: body
+        name: team_id
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Player'
+      tags:
+      - Team
+  /showTeams:
+    get:
+      consumes:
+      - application/json
+      description: Shows the list of teams
+      parameters:
+      - description: ID of the User
+        in: query
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Team'
+      tags:
+      - Team
+  /tossResult:
+    post:
+      consumes:
+      - application/json
+      description: Give the random result of coin toss and which team won the toss
+      parameters:
+      - description: Toss Details
+        in: body
+        name: toss
+        required: true
+        schema:
+          $ref: '#/definitions/models.Toss'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Toss'
+      tags:
+      - Toss
+swagger: "2.0"

@@ -14,12 +14,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// @Description Registers a user
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Credential
+// @Param UserDetails body models.Credential true "Registers a user"
+// @Tags Authentication
+// @Router /register [post]
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	u.SetHeader(w)
+	EnableCors(&w)
 	var credential models.Credential
 	json.NewDecoder(r.Body).Decode(&credential)
 
@@ -40,11 +48,18 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Description Login a user
+// @Accept json
+// @Success 200 {string} Logged in successfully
+// @Param UserDetails body models.Credential true "Log in the user"
+// @Tags Authentication
+// @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+	EnableCors(&w)
 	var credential models.Credential
 	json.NewDecoder(r.Body).Decode(&credential)
 	var existCred models.Credential
@@ -66,7 +81,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	expirationTime := time.Now().Add(5 * time.Minute)
-
+	EnableCors(&w)
 	fmt.Println("expiration time is: ", expirationTime)
 	var credential models.Credential
 	username := r.URL.Query().Get("username")
@@ -96,7 +111,8 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	tokenString := r.URL.Query().Get("token")
+	EnableCors(&w)
+	tokenString := r.Header.Get("token")
 
 	claims := &models.Claims{}
 
