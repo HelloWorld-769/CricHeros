@@ -15,13 +15,22 @@ import (
 // @Success 200
 // @Router /endInning [post]
 func EndInningHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
+
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
 	var teamData []models.Team
-	db.DB.Where("t_id=?", mp["team_id"]).Find(&teamData)
+	err = db.DB.Where("t_id=?", mp["teamId"]).Find(&teamData).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 	totalScore := 0
 	for _, player := range teamData {
 		var playerRecord models.ScoreCard
@@ -29,9 +38,45 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 		totalScore += int(playerRecord.RunScored)
 	}
 	inning := models.Inning{
-		T_ID:   mp["team_id"],
+		M_ID:   mp["matchId"],
+		T_ID:   mp["teamId"],
 		TScore: int64(totalScore),
 	}
 
-	db.DB.Create(&inning)
+	err = db.DB.Create(&inning).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	u.ShowResponse("Success", http.StatusOK, inning, w)
+}
+
+func EndInningHandler2(mp map[string]string, w http.ResponseWriter) {
+
+	var teamData []models.Team
+	err := db.DB.Where("t_id=?", mp["teamId"]).Find(&teamData).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	totalScore := 0
+	for _, player := range teamData {
+		var playerRecord models.ScoreCard
+		db.DB.Where("p_id=?", player.P_ID).Find(&playerRecord)
+		totalScore += int(playerRecord.RunScored)
+	}
+	inning := models.Inning{
+		M_ID:   mp["matchId"],
+		T_ID:   mp["teamId"],
+		TScore: int64(totalScore),
+	}
+
+	err = db.DB.Create(&inning).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	u.ShowResponse("Success", http.StatusOK, inning, w)
 }

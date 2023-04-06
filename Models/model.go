@@ -1,154 +1,175 @@
 package models
 
 import (
+	"time"
+
 	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/gorm"
 )
 
 type Response struct {
-	Player Player
-	Career Career
-	Teams  TeamList
-	gorm.Model
+	Status string      `json:"status"`
+	Code   int64       `json:"code"`
+	Data   interface{} `json:"data"`
+}
+type PlayerData struct {
+	Player    Player
+	Career    Career
+	Teams     TeamList
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Player struct {
-	gorm.Model
-	P_ID   string `json:"player_id" gorm:"default:uuid_generate_v4();primaryKey"`
-	P_Name string `json:"player_name"`
+	P_ID   string `json:"playerId" gorm:"default:uuid_generate_v4();primaryKey"`
+	P_Name string `json:"playerName" validate:"required"`
 
-	P_Age    int64  `json:"player_age"`
-	JerseyNo int64  `json:"jersey_no"`
-	PhoneNo  string `json:"phone_no"`
-	Country  string `json:"country"`
+	P_Age     int64  `json:"playerAge" validate:"required,gt=18"`
+	JerseyNo  int64  `json:"jerseyNo" validate:"required"`
+	PhoneNo   string `json:"phoneNo" validate:"required"`
+	Country   string `json:"country" validate:"required"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type TeamList struct {
-	gorm.Model
-	P_ID string `json:"p_id"`
-	T_ID string `json:"t_id"`
+	P_ID      string `json:"playerId"`
+	T_ID      string `json:"teamId"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Career struct {
-	P_ID       string  `json:"player_id"`
-	MPlayed    int64   `json:"matches_played"`
-	RunScored  int64   `json:"run_scored"`
-	HScored    int64   `json:"highest_score"` //high score
-	AvgScore   float64 `json:"average_score"`
-	BallsFaced int64   `json:"balls_faced"`
-	//	BatSR      float64 `json:"bat_sr"` //batting strike rate
+	P_ID        string  `json:"playerId"`
+	MPlayed     int64   `json:"matchesPlayed"`
+	RunScored   int64   `json:"runScored"`
+	HScored     int64   `json:"highestScore"` //high score
+	AvgScore    float64 `json:"averageScore"`
+	BallsFaced  int64   `json:"ballsFaced"`
 	Fifites     int64   `json:"fifties"`
 	Hundreds    int64   `json:"hundreds"`
-	TwoHundreds int64   `json:"two_hundreds"`
+	TwoHundreds int64   `json:"twoHundreds"`
 	Fours       int64   `json:"fours"`
 	Sixes       int64   `json:"sixes"`
-	BBowl       int64   `json:"balls_bowled"` //Balls Bowled
-	RConced     int64   `json:"runs_conced"`  //Runs Conceded
+	BBowl       int64   `json:"ballsBowled"` //Balls Bowled
+	RConced     int64   `json:"runsConced"`  //Runs Conceded
 	Wickets     int64   `json:"wickets"`
-	BowlAvg     float64 `json:"bowling_average"`
-	//BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
-	Economy float64 `json:"economy"`
+	BowlAvg     float64 `json:"bowlingAverage"`
+	Economy     float64 `json:"economy"`
 
-	gorm.Model
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type MatchRecord struct {
 	M_ID string
 	S_ID string
 
-	gorm.Model
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Match struct {
-	M_ID    string `json:"match_id" gorm:"default:uuid_generate_v4();primaryKey"`
-	S_ID    string `json:"scorecard_id" gorm:"default:uuid_generate_v4()"` //scorecard related to it
-	T1_ID   string `json:"team1_id"`
-	T2_ID   string `json:"team2_id"`
-	Room_ID string `json:"room_id" gorm:"default:uuid_generate_v4()"`
-	Date    string `json:"date"`
-	Venue   string `json:"venue"`
-	Text    string `json:"text"` //who won the match/
-	Status  string `json:"status" gorm:"default:active"`
+	U_ID   string `json:"userId"`
+	M_ID   string `json:"matchId" gorm:"default:uuid_generate_v4();primaryKey"`
+	S_ID   string `json:"scorecardId" gorm:"default:uuid_generate_v4()"` //scorecard related to it
+	T1_ID  string `json:"team1Id" validate:"required"`
+	T2_ID  string `json:"team2Id" validate:"required"`
+	Date   string `json:"date"`
+	Venue  string `json:"venue" validate:"required"`
+	Text   string `json:"text"` //who won the match/
+	Status string `json:"status" gorm:"default:active"`
 
-	gorm.Model
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type Team struct {
-	U_ID      string `json:"user_id"`
-	T_ID      string `json:"team_id" gorm:"default:uuid_generate_v4()"`
-	T_Name    string `json:"team_name"`
-	T_Captain string `json:"team_captain"`
-	T_Type    string `json:"team_type"`
-	P_ID      string `json:"player_id"`
-
-	gorm.Model
+	U_ID      string `json:"userId" `
+	T_ID      string `json:"teamId" gorm:"default:uuid_generate_v4()"`
+	T_Name    string `json:"teamName" validate:"required"`
+	T_Captain string `json:"teamCaptain" validate:"required" `
+	T_Type    string `json:"teamType" validate:"required"`
+	P_ID      string `json:"playerId"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type ScoreCard struct {
-	S_ID      string `json:"scorecard_id"`
-	P_ID      string `json:"player_id"`
-	PType     string `json:"player_type"`
-	RunScored int64
+	S_ID      string  `json:"scorecardId"`
+	P_ID      string  `json:"playerId"`
+	PType     string  `json:"playerType" validate:"required"`
+	RunScored int64   `json:"runScored"`
 	Fours     int64   `json:"fours"`
 	Sixes     int64   `json:"sixes"`
-	SR        float64 `json:"strike_rate"`
-	BPlayed   int64   `json:"balls_played"`
-	OBowled   int64   `json:"overs_bowled"`
-	MOvers    int64   `json:"maiden_overs"`
-	RunGiven  int64   `json:"runs_given"`
+	SR        float64 `json:"strikeRate"`
+	BPlayed   int64   `json:"ballsPlayed"`
+	OBowled   int64   `json:"oversBowled"`
+	MOvers    int64   `json:"maidenOvers"`
+	RunGiven  int64   `json:"runsGiven"`
 	Wickets   int64   `json:"wickets"`
-	NB        int64   `json:"no_balls"`
-	WD        int64   `json:"wide_balls"`
+	NB        int64   `json:"noBalls"`
+	WD        int64   `json:"wideBalls"`
 	Eco       float64 `json:"economy"`
-	IsOut     string  `json:"is_out" gorm:"default:not_out"`
+	IsOut     string  `json:"isOut" gorm:"default:not_out"`
 
-	gorm.Model
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Balls struct {
-	B_ID      string  `json:"ball_id" gorm:"default:uuid_generate_v4()"`
-	M_ID      string  `json:"match_id"`
-	P_ID      string  `json:"player_id"`
-	BallType  string  `json:"ball_type"`
-	Runs      int64   `json:"runs"` //runs on that particular ball
-	IsValid   string  `json:"is_valid"`
+	B_ID      string  `json:"ballId" gorm:"default:uuid_generate_v4()"`
+	M_ID      string  `json:"matchId" `
+	P_ID      string  `json:"playerId"  `
+	BallType  string  `json:"ballType"  `
+	Runs      int64   `json:"runs"  ` //runs on that particular ball
+	IsValid   string  `json:"isValid"  `
 	Over      float64 `json:"over"`
-	BallCount int64   `json:"ball_count"`
-	gorm.Model
+	BallCount int64   `json:"ballCount"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type CardData struct {
-	M_ID      string `json:"match_id"`
-	Batsmen   string `json:"batsmen"`
-	S_ID      string `json:"scorecard_id"`
-	Baller    string `json:"baller"`
-	Runs      int64  `json:"runs"`
-	Ball_Type string `json:"ball_type"`
-	PrevRuns  int64  `json:"prev_runs"`
+	M_ID      string `json:"matchId" validate:"required"`
+	Batsmen   string `json:"batsmen" validate:"required"`
+	Baller    string `json:"baller" validate:"required"`
+	Runs      int64  `json:"runs" validate:"required oneof=1 2 3 4 5 6 7"`
+	Ball_Type string `json:"ballType" validate:"required"`
+	PrevRuns  int64  `json:"prevRuns"`
 }
 type Credential struct {
-	User_ID  string `json:"user_id" gorm:"default:uuid_generate_v4()"`
-	Username string `json:"username"`
-	PhoneNo  string `json:"phone_no"`
-	Password string `json:"password"`
-	gorm.Model
+	User_ID   string `json:"user_id" gorm:"default:uuid_generate_v4()"`
+	Username  string `json:"userName"  validate:"required"`
+	Email     string `json:"email" gorm:"unique"  validate:"required,email"`
+	Role      string `json:"role"`
+	Password  string `json:"password" validate:"required"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
-type Err struct {
-	Message    string
-	StatusCode int64
-}
 type Claims struct {
-	UserId   string
-	Username string `json:"user_id"`
+	UserID string
+	Role   string
 	jwt.RegisteredClaims
 }
 
 type Inning struct {
+	M_ID   string
 	T_ID   string
 	TScore int64
 }
 
 type Toss struct {
 	Toss_ID  string `json:"toss_id" gorm:"default:uuid_generate_v4()"`
-	M_ID     string `json:"match_id"`
-	T1_ID    string `json:"head_team"`
-	T2_ID    string `json:"tail_team"`
+	M_ID     string `json:"match_id" validate:"required"`
+	T1_ID    string `json:"head_team"  validate:"required"`
+	T2_ID    string `json:"tail_team"  validate:"required"`
 	Decision string `json:"decision"`
 	TossWon  string `json:"toss_won"`
 }

@@ -29,6 +29,7 @@ func Routes() {
 	mux.HandleFunc("/createPlayer", c.AddPlayerHandler)
 	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler)
 	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler)
+	mux.HandleFunc("/retirePlayer", c.DeletePlayerHandler)
 
 	//Career routes
 	mux.HandleFunc("/addCareer", c.AddCareerHandler)
@@ -41,34 +42,34 @@ func Routes() {
 	mux.HandleFunc("/deleteTeamByID", c.DeleteTeamHandler)
 
 	//Authentication Handler
-	mux.HandleFunc("/register", c.RegisterHandler)
+	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler)
+	mux.HandleFunc("/userRegister", c.UserRegisterHandler)
 	mux.HandleFunc("/login", c.LoginHandler)
 	mux.HandleFunc("/forgotPassword", c.ForgotPasswordHandler)
 	mux.HandleFunc("/resetPassword", c.ResetPasswordHandler)
+	mux.HandleFunc("/updatePassword", c.UpdatePasswordHandler)
 
 	//Match routes
-	mux.HandleFunc("/createMatch", c.CreateMatchHandler)
+	mux.Handle("/createMatch", c.AdminMiddlerware(http.HandlerFunc(c.CreateMatchHandler)))
 	mux.HandleFunc("/showMatch", c.ShowMatchHandler)
-	mux.HandleFunc("/endMatch", c.EndMatchHandler)
+	mux.Handle("/endMatch", c.AdminMiddlerware(http.HandlerFunc(c.EndMatchHandler)))
 
 	//score card routes
-	mux.HandleFunc("/addToScoreCard", c.ScorecardRecordHandler)
+	mux.Handle("/addToScoreCard", c.AdminMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler)))
 
 	//Innings routes
-	mux.HandleFunc("/endInning", c.EndInningHandler)
+	mux.Handle("/endInning", c.AdminMiddlerware(http.HandlerFunc(c.EndInningHandler)))
 
 	//Toss Routes
-	mux.HandleFunc("/tossResult", c.TossResultHandler)
-	mux.HandleFunc("/DecisionUpdate", c.DecisionUpdateHandler)
+	mux.Handle("/tossResult", c.AdminMiddlerware(http.HandlerFunc(c.TossResultHandler)))
+	mux.Handle("/DecisionUpdate", c.AdminMiddlerware(http.HandlerFunc(c.DecisionUpdateHandler)))
 
 	//Socket Server
 	mux.Handle("/socket.io/", socketServer)
 	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	//Ball Handler
-	mux.HandleFunc("/ballUpdate", c.UpdateBallRecord)
-
-	// mux.HandleFunc("/swagger/", httpSwagger.WrapHandler)
+	mux.Handle("/ballUpdate", c.AdminMiddlerware(http.HandlerFunc(c.UpdateBallRecord)))
 
 	//Listening to the server
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))

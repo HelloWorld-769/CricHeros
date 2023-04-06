@@ -19,18 +19,20 @@ import (
 // @Tags Match
 // @Router /createMatch [post]
 func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
+	claims := r.Context().Value("claims").(*models.Claims)
 	var match models.Match
 	json.NewDecoder(r.Body).Decode(&match)
 	var count int64
 	query := "SELECT * FROM teams where t_id=? and p_id IN (SELECT p_id FROM teams WHERE t_id=? )"
 	db.DB.Raw(query, match.T1_ID, match.T2_ID).Count(&count)
-	fmt.Println("Count isL: ", count)
+	fmt.Println("Count is: ", count)
 	if count != 0 {
-		u.ShowErr("Common record found Please Edit your teams", 400, w)
+		u.ShowResponse("Failure", 400, "Common record found Please Edit your teams", w)
 		return
 	}
+	match.U_ID = claims.UserID
 	now := time.Now()
 	match.Date = now.Format("02 Jan 2006")
 	db.DB.Create(&match)
@@ -40,7 +42,7 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	db.DB.Create(&matchRecord)
 
-	u.Encode(w, &match)
+	u.ShowResponse("Success", http.StatusOK, match, w)
 }
 
 // @Description Show the list of matches
@@ -50,11 +52,11 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Match
 // @Router /showMatch [post]
 func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
 	var matches []models.Match
 	db.DB.Find(&matches)
-	u.Encode(w, &matches)
+	u.ShowResponse("Success", http.StatusOK, matches, w)
 }
 
 // @Description Ends the match and updates the scorecard of every player
@@ -64,21 +66,55 @@ func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Match
 // @Router /endMatch [post]
 func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
+	claims := r.Context().Value("claims").(*models.Claims)
 	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	EndInningHandler2(mp, w)
+
+	//get match data to update its status to completed
 	var matchData models.Match
-	db.DB.Where("s_id", mp["match_id"]).Find(&matchData)
+	err = db.DB.Where("s_id", mp["matchId"]).Find(&matchData).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	if claims.UserID != matchData.U_ID {
+		u.ShowResponse("Failure", 400, "This user did not created the match", w)
+		return
+	}
 	matchData.Status = "Completed"
+
+	//find the scorecard relatedd to that match
 	var scorecard models.MatchRecord
-	db.DB.Where("m_id=?", mp["match_id"]).First(&scorecard)
+	err = db.DB.Where("m_id=?", mp["matchId"]).First(&scorecard).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	//Fetch all the score and update the result
 	var records []models.ScoreCard
-	db.DB.Where("s_id", scorecard.S_ID).Find(&records)
+	err = db.DB.Where("s_id", scorecard.S_ID).Find(&records).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
 	for _, record := range records {
 		//fmt.Println("Player id is:", record.P_ID)
 		var pCareer models.Career
-		db.DB.Where("p_id=?", record.P_ID).First(&pCareer)
+		err = db.DB.Where("p_id=?", record.P_ID).First(&pCareer).Error
+		if err != nil {
+			u.ShowResponse("Failure", 400, err.Error(), w)
+			return
+		}
 		pCareer.MPlayed += 1
 		if record.PType == "batsmen" {
 			pCareer.RunScored += record.RunScored
@@ -103,6 +139,25 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		db.DB.Where("p_id=?", record.P_ID).Updates(&pCareer)
 	}
 
-	//fmt.Println("records in scorecard is:", records)
+	var teamsRuns []models.Inning
+	err = db.DB.Where("m_id=?", mp["matchId"]).Find(&teamsRuns).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	fmt.Println("jdfj:", teamsRuns)
+	if teamsRuns[0].TScore > teamsRuns[1].TScore {
+		matchData.Text = teamsRuns[0].T_ID + " Won the match"
+	} else {
+		matchData.Text = teamsRuns[1].T_ID + " Won the match"
+	}
+
+	err = db.DB.Where("m_id=?", mp["matchId"]).Updates(&matchData).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	u.ShowResponse("Success", http.StatusOK, matchData, w)
 
 }

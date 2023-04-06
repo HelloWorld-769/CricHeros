@@ -5,7 +5,6 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -19,19 +18,23 @@ import (
 // @Router /addCareer [post]
 func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
 
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
 	id := r.URL.Query().Get("id")
 
 	var career models.Career
 	err := json.NewDecoder(r.Body).Decode(&career)
 	if err != nil {
-		fmt.Println("Error in decoding the body")
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 	career.P_ID = id
-	db.DB.Create(&career)
+	err = db.DB.Create(&career).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
-	json.NewEncoder(w).Encode(&career)
+	u.ShowResponse("Success", http.StatusOK, &career, w)
 
 }

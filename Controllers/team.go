@@ -5,7 +5,6 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -24,11 +23,28 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	id := r.URL.Query().Get("id")
 	u.SetHeader(w)
+	u.EnableCors(&w)
 	var team models.Team
-	json.NewDecoder(r.Body).Decode(&team)
+	err := json.NewDecoder(r.Body).Decode(&team)
+
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	validationErr := u.CheckValidation(team)
+	if validationErr != nil {
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		return
+	}
+
 	team.U_ID = id
-	db.DB.Create(&team)
-	json.NewEncoder(w).Encode(&team)
+	err = db.DB.Create(&team).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	u.ShowResponse("Success", 200, team, w)
 }
 
 // @Description Add player to team
@@ -40,12 +56,21 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /addPlayertoTeam [post]
 func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
+	u.EnableCors(&w)
 	var mp = make(map[string][]string)
 
-	json.NewDecoder(r.Body).Decode(&mp)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 	id := r.URL.Query().Get("id")
 	var team models.Team
-	db.DB.Where("t_id=?", id).First(&team)
+	err = db.DB.Where("t_id=?", id).First(&team).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 	for _, p := range mp["players"] {
 		var player models.Player
 		team.P_ID = p
@@ -58,6 +83,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 		db.DB.Create(&team)
 	}
 	db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id)
+	u.ShowResponse("Success", 200, "Players added to the team", w)
 
 }
 
@@ -70,19 +96,25 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /showTeams [get]
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
+	u.EnableCors(&w)
+	u.SetHeader(w)
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 	id := mp["id"]
-	u.SetHeader(w)
 	var teams []models.Team
 	query := "SELECT DISTINCT t_id,t_name,t_captain,t_type FROM teams where u_id=?"
 	db.DB.Raw(query, id).Scan(&teams)
 
-	json.NewEncoder(w).Encode(teams)
+	u.ShowResponse("Success", 200, teams, w)
+
 }
 
 // @Description Shows the list of teams
@@ -99,10 +131,15 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u.SetHeader(w)
+	u.EnableCors(&w)
 	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
-	t_id := mp["team_id"]
-	u_id := mp["user_id"]
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	t_id := mp["teamId"]
+	u_id := mp["userId"]
 	var team models.Team
 	var player []string
 	//var players []string
@@ -112,8 +149,8 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 	query = "SELECT p.p_name from players as p JOIN teams as t ON p.p_id=t.p_id WHERE t.t_id=? AND t.u_id=?"
 	db.DB.Raw(query, t_id, u_id).Scan(&player)
 
-	json.NewEncoder(w).Encode(&team)
-	json.NewEncoder(w).Encode(&player)
+	u.ShowResponse("Success", 200, &team, w)
+	u.ShowResponse("Success", 200, &player, w)
 
 }
 
@@ -128,13 +165,14 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /deleteTeamByID [delete]
 func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	EnableCors(&w)
+	u.EnableCors(&w)
 	id := r.URL.Query().Get("id")
 	query := "DELETE FROM teams WHERE t_id=?;"
 	err := db.DB.Raw(query, id).Error
 	if err != nil {
-		u.ShowErr("unable to delete team", 500, w)
+		u.ShowResponse("Success", 500, err, w)
 		return
 	}
-	fmt.Fprintf(w, "Team deleted successfully")
+
+	u.ShowResponse("Success", 200, "Team deleted successfully", w)
 }

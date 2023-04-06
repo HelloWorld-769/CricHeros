@@ -20,8 +20,8 @@ func Connect() error {
 		fmt.Println("Error in connecting to database: ", err)
 		return err
 	}
-	query:=`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-	db.Exec(query);
+	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`
+	db.Exec(query)
 	DB = db
 	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credential{}, &models.Balls{}, &models.ScoreCard{}, &models.MatchRecord{}, &models.TeamList{}, &models.Inning{}, &models.Toss{})
 	if err != nil {

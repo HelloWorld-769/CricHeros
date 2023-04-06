@@ -3,9 +3,9 @@ package controllers
 import (
 	db "cricHeros/Database"
 	models "cricHeros/Models"
+	u "cricHeros/Utils"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 
 	"gorm.io/gorm"
@@ -59,9 +59,16 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 func UpdateBallRecord(w http.ResponseWriter, r *http.Request) {
 	ball_id := r.URL.Query().Get("id")
 	var ballRecord models.Balls
-	json.NewDecoder(r.Body).Decode(&ballRecord)
+	err := json.NewDecoder(r.Body).Decode(&ballRecord)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
-	db.DB.Where("b_id=?", ball_id).Updates(&ballRecord)
-	fmt.Println("Ball Updated Sucessfully")
-	json.NewEncoder(w).Encode(&ballRecord)
+	err = db.DB.Where("b_id=?", ball_id).Updates(&ballRecord).Error
+	if err != nil {
+		u.ShowResponse("Failure", http.StatusInternalServerError, err.Error(), w)
+		return
+	}
+	u.ShowResponse("Success", http.StatusOK, ballRecord, w)
 }
