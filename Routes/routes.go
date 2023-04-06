@@ -15,7 +15,7 @@ import (
 )
 
 func Routes() {
-	fmt.Println("Listening on port:", os.Getenv("PORT"))
+	fmt.Println("Listening on port", os.Getenv("PORT"))
 	mux := mux.NewRouter()
 	err := db.Connect()
 	if err != nil {
@@ -26,50 +26,52 @@ func Routes() {
 	defer socketServer.Close()
 
 	//Player routes
-	mux.HandleFunc("/createPlayer", c.AddPlayerHandler)
-	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler)
-	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler)
-	mux.HandleFunc("/retirePlayer", c.DeletePlayerHandler)
+	mux.HandleFunc("/createPlayer", c.AddPlayerHandler).Methods("POST")
+	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler).Methods("GET")
+	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler).Methods("POST")
+	mux.HandleFunc("/retirePlayer", c.DeletePlayerHandler).Methods("DELETE")
 
 	//Career routes
-	mux.HandleFunc("/addCareer", c.AddCareerHandler)
+	mux.HandleFunc("/addCareer", c.AddCareerHandler).Methods("POST")
 
 	//team routes
-	mux.HandleFunc("/createTeam", c.CreateTeamHandler)
-	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler)
-	mux.HandleFunc("/showTeams", c.ShowTeamsHandler)
-	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler)
-	mux.HandleFunc("/deleteTeamByID", c.DeleteTeamHandler)
+	mux.HandleFunc("/createTeam", c.CreateTeamHandler).Methods("POST")
+	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler).Methods("POST")
+	mux.HandleFunc("/showTeams", c.ShowTeamsHandler).Methods("GET")
+	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler).Methods("POST")
+	mux.HandleFunc("/deleteTeamByID", c.DeleteTeamHandler).Methods("DELETE")
 
 	//Authentication Handler
-	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler)
-	mux.HandleFunc("/userRegister", c.UserRegisterHandler)
-	mux.HandleFunc("/login", c.LoginHandler)
-	mux.HandleFunc("/forgotPassword", c.ForgotPasswordHandler)
-	mux.HandleFunc("/resetPassword", c.ResetPasswordHandler)
-	mux.HandleFunc("/updatePassword", c.UpdatePasswordHandler)
+	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler).Methods("POST")
+	mux.HandleFunc("/userRegister", c.UserRegisterHandler).Methods("POST")
+	mux.HandleFunc("/login", c.LoginHandler).Methods("POST")
+	mux.HandleFunc("/forgotPassword", c.ForgotPasswordHandler).Methods("POST")
+	mux.HandleFunc("/resetPassword", c.ResetPasswordHandler).Methods("POST")
+	mux.HandleFunc("/updatePassword", c.UpdatePasswordHandler).Methods("PUT")
 
 	//Match routes
-	mux.Handle("/createMatch", c.AdminMiddlerware(http.HandlerFunc(c.CreateMatchHandler)))
-	mux.HandleFunc("/showMatch", c.ShowMatchHandler)
-	mux.Handle("/endMatch", c.AdminMiddlerware(http.HandlerFunc(c.EndMatchHandler)))
+	mux.Handle("/createMatch", c.AdminMiddlerware(http.HandlerFunc(c.CreateMatchHandler))).Methods("POST")
+	mux.HandleFunc("/showMatch", c.ShowMatchHandler).Methods("GET")
+	mux.Handle("/endMatch", c.AdminMiddlerware(http.HandlerFunc(c.EndMatchHandler))).Methods("POST")
 
 	//score card routes
-	mux.Handle("/addToScoreCard", c.AdminMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler)))
+	mux.Handle("/addToScoreCard", c.AdminMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler))).Methods("POST")
 
 	//Innings routes
-	mux.Handle("/endInning", c.AdminMiddlerware(http.HandlerFunc(c.EndInningHandler)))
+	mux.Handle("/endInning", c.AdminMiddlerware(http.HandlerFunc(c.EndInningHandler))).Methods("POST")
 
 	//Toss Routes
-	mux.Handle("/tossResult", c.AdminMiddlerware(http.HandlerFunc(c.TossResultHandler)))
-	mux.Handle("/DecisionUpdate", c.AdminMiddlerware(http.HandlerFunc(c.DecisionUpdateHandler)))
+	mux.Handle("/tossResult", c.AdminMiddlerware(http.HandlerFunc(c.TossResultHandler))).Methods("POST")
+	mux.Handle("/decisionUpdate", c.AdminMiddlerware(http.HandlerFunc(c.DecisionUpdateHandler))).Methods("POST")
+
+	//Ball Handler
+	mux.Handle("/ballUpdate", c.AdminMiddlerware(http.HandlerFunc(c.UpdateBallRecord))).Methods("POST")
 
 	//Socket Server
 	mux.Handle("/socket.io/", socketServer)
-	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
-	//Ball Handler
-	mux.Handle("/ballUpdate", c.AdminMiddlerware(http.HandlerFunc(c.UpdateBallRecord)))
+	//API doucmentation route
+	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler).Methods("GET")
 
 	//Listening to the server
 	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), mux))

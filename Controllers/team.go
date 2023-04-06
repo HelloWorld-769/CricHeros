@@ -11,16 +11,13 @@ import (
 // @Description Creates a team
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Team
+// @Success 200 {object} models.Response
 // @Param id query string true "ID of the user"
 // @Param TeamDetails body models.Team true "Details of the team"
 // @Tags Team
 // @Router /createTeam [post]
 func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
+
 	id := r.URL.Query().Get("id")
 	u.SetHeader(w)
 	u.EnableCors(&w)
@@ -49,7 +46,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 // @Description Add player to team
 // @Accept json
-// @Success 200
+// @Success 200 {object} models.Response
 // @Param id query string true "ID of the team"
 // @Param player body []string true "Array of players"
 // @Tags Team
@@ -90,7 +87,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Shows the list of teams
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Team
+// @Success 200 {object} models.Response
 // @Param id query string true "ID of the User"
 // @Tags Team
 // @Router /showTeams [get]
@@ -98,10 +95,6 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 
 	u.EnableCors(&w)
 	u.SetHeader(w)
-	if r.Method != http.MethodGet {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	var mp = make(map[string]string)
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
@@ -109,6 +102,10 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := mp["id"]
+	if id == "" {
+		u.ShowResponse("Failure", 400, "required user id", w)
+		return
+	}
 	var teams []models.Team
 	query := "SELECT DISTINCT t_id,t_name,t_captain,t_type FROM teams where u_id=?"
 	db.DB.Raw(query, id).Scan(&teams)
@@ -120,16 +117,11 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Shows the list of teams
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Team
-// @Success 200 {object} models.Player
+// @Success 200 {object} models.Response
 // @Param  team_id body string  true "ID of the team".
 // @Tags Team
 // @Router /showTeamByID [post]
 func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var mp = make(map[string]string)
@@ -157,8 +149,7 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Delete the team
 // @Accept json
 // @Produces json
-// @Success 200 {string} Team deleted successfull
-// @Failure 500 {string}  Unable to delete the tea
+// @Success 200 {object} models.Response
 // @Param id query string true "ID of the team".
 // @Param user_id body object true "ID of the user"
 // @Tags Team
@@ -167,6 +158,10 @@ func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		u.ShowResponse("Failure", 400, "Id not provided", w)
+		return
+	}
 	query := "DELETE FROM teams WHERE t_id=?;"
 	err := db.DB.Raw(query, id).Error
 	if err != nil {

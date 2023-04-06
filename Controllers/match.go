@@ -14,7 +14,7 @@ import (
 // @Description Create the match between the teams
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Match
+// @Success 200 {object} models.Response
 // @Param match body models.Match true "Match details"
 // @Tags Match
 // @Router /createMatch [post]
@@ -48,7 +48,7 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Show the list of matches
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Match
+// @Success 200 {object} models.Response
 // @Tags Match
 // @Router /showMatch [post]
 func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,7 +61,7 @@ func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
 
 // @Description Ends the match and updates the scorecard of every player
 // @Accept json
-// @Success 200 {object} models.Match
+// @Success 200 {object} models.Response
 // @Param match_id body object true "Id of the match to end"
 // @Tags Match
 // @Router /endMatch [post]
@@ -69,7 +69,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	claims := r.Context().Value("claims").(*models.Claims)
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
@@ -80,7 +80,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	//get match data to update its status to completed
 	var matchData models.Match
-	err = db.DB.Where("s_id", mp["matchId"]).Find(&matchData).Error
+	err = db.DB.Where("s_id", mp["matchId"].(string)).Find(&matchData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
@@ -93,7 +93,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	//find the scorecard relatedd to that match
 	var scorecard models.MatchRecord
-	err = db.DB.Where("m_id=?", mp["matchId"]).First(&scorecard).Error
+	err = db.DB.Where("m_id=?", mp["matchId"].(string)).First(&scorecard).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
@@ -140,7 +140,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var teamsRuns []models.Inning
-	err = db.DB.Where("m_id=?", mp["matchId"]).Find(&teamsRuns).Error
+	err = db.DB.Where("m_id=?", mp["matchId"].(string)).Find(&teamsRuns).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
@@ -152,7 +152,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		matchData.Text = teamsRuns[1].T_ID + " Won the match"
 	}
 
-	err = db.DB.Where("m_id=?", mp["matchId"]).Updates(&matchData).Error
+	err = db.DB.Where("m_id=?", mp["matchId"].(string)).Updates(&matchData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return

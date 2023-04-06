@@ -12,12 +12,12 @@ import (
 // @Accept json
 // @Param team_id body object true "Id of the team to end its inning"
 // @Tags Inning
-// @Success 200
+// @Success 200 {object} models.Response
 // @Router /endInning [post]
 func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
 
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
@@ -26,7 +26,7 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var teamData []models.Team
-	err = db.DB.Where("t_id=?", mp["teamId"]).Find(&teamData).Error
+	err = db.DB.Where("t_id=?", mp["teamId"].(string)).Find(&teamData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
@@ -38,8 +38,8 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 		totalScore += int(playerRecord.RunScored)
 	}
 	inning := models.Inning{
-		M_ID:   mp["matchId"],
-		T_ID:   mp["teamId"],
+		M_ID:   mp["matchId"].(string),
+		T_ID:   mp["teamId"].(string),
 		TScore: int64(totalScore),
 	}
 
@@ -52,14 +52,15 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	u.ShowResponse("Success", http.StatusOK, inning, w)
 }
 
-func EndInningHandler2(mp map[string]string, w http.ResponseWriter) {
+func EndInningHandler2(mp map[string]interface{}, w http.ResponseWriter) {
 
 	var teamData []models.Team
-	err := db.DB.Where("t_id=?", mp["teamId"]).Find(&teamData).Error
+	err := db.DB.Where("t_id=?", mp["teamId"].(string)).Find(&teamData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
+
 	totalScore := 0
 	for _, player := range teamData {
 		var playerRecord models.ScoreCard
@@ -67,8 +68,8 @@ func EndInningHandler2(mp map[string]string, w http.ResponseWriter) {
 		totalScore += int(playerRecord.RunScored)
 	}
 	inning := models.Inning{
-		M_ID:   mp["matchId"],
-		T_ID:   mp["teamId"],
+		M_ID:   mp["matchId"].(string),
+		T_ID:   mp["teamId"].(string),
 		TScore: int64(totalScore),
 	}
 

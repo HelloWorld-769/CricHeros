@@ -15,6 +15,7 @@ import (
 )
 
 var Validate = validator.New()
+var valid *validator.Validate
 
 func ShowResponse(status string, statusCode int64, data interface{}, w http.ResponseWriter) {
 	SetHeader(w)

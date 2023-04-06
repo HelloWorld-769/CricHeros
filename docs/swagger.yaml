@@ -7,32 +7,6 @@ definitions:
         description: Valid is true if Time is not NULL
         type: boolean
     type: object
-  models.Balls:
-    properties:
-      ballCount:
-        type: integer
-      ballId:
-        type: string
-      ballType:
-        type: string
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      isValid:
-        type: string
-      matchId:
-        type: string
-      over:
-        type: number
-      playerId:
-        type: string
-      runs:
-        description: runs on that particular ball
-        type: integer
-      updatedAt:
-        type: string
-    type: object
   models.CardData:
     properties:
       ballType:
@@ -188,49 +162,6 @@ definitions:
       status:
         type: string
     type: object
-  models.ScoreCard:
-    properties:
-      ballsPlayed:
-        type: integer
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      economy:
-        type: number
-      fours:
-        type: integer
-      isOut:
-        type: string
-      maidenOvers:
-        type: integer
-      noBalls:
-        type: integer
-      oversBowled:
-        type: integer
-      playerId:
-        type: string
-      playerType:
-        type: string
-      runScored:
-        type: integer
-      runsGiven:
-        type: integer
-      scorecardId:
-        type: string
-      sixes:
-        type: integer
-      strikeRate:
-        type: number
-      updatedAt:
-        type: string
-      wickets:
-        type: integer
-      wideBalls:
-        type: integer
-    required:
-    - playerType
-    type: object
   models.Team:
     properties:
       createdAt:
@@ -282,25 +213,6 @@ info:
   title: Cric Heros API
   version: 1.0.0
 paths:
-  /DecisionUpdate:
-    put:
-      consumes:
-      - application/json
-      description: Updates the decison taken by the team after wining the toss
-      parameters:
-      - description: Descision Updated
-        in: body
-        name: toss
-        required: true
-        schema:
-          $ref: '#/definitions/models.Toss'
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Toss'
-      tags:
-      - Toss
   /addCareer:
     post:
       consumes:
@@ -324,7 +236,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Career'
+            $ref: '#/definitions/models.Response'
       tags:
       - Player
   /addPlayertoTeam:
@@ -349,6 +261,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
       tags:
       - Team
   /addToScoreCard:
@@ -367,7 +281,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ScoreCard'
+            $ref: '#/definitions/models.Response'
       tags:
       - Scorecard
   /adminRegister:
@@ -376,19 +290,19 @@ paths:
       - application/json
       description: Registers a user
       parameters:
-      - description: ID of the user whose passsword is to be changed
+      - description: Registers a user
         in: body
-        name: user_id
+        name: UserDetails
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Credential'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Credential'
+            $ref: '#/definitions/models.Response'
       tags:
       - Authentication
   /ballUpdate:
@@ -408,7 +322,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Balls'
+            $ref: '#/definitions/models.Response'
       tags:
       - Ball
   /createMatch:
@@ -427,7 +341,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Match'
+            $ref: '#/definitions/models.Response'
       tags:
       - Match
   /createPlayer:
@@ -448,7 +362,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Player'
+            $ref: '#/definitions/models.Response'
       tags:
       - Player
   /createTeam:
@@ -472,9 +386,28 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.Response'
       tags:
       - Team
+  /decisionUpdate:
+    put:
+      consumes:
+      - application/json
+      description: Updates the decison taken by the team after wining the toss
+      parameters:
+      - description: Descision Updated
+        in: body
+        name: toss
+        required: true
+        schema:
+          $ref: '#/definitions/models.Toss'
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Toss
   /deleteTeamByID:
     delete:
       consumes:
@@ -496,11 +429,7 @@ paths:
         "200":
           description: OK
           schema:
-            type: string
-        "500":
-          description: Internal Server Error
-          schema:
-            type: string
+            $ref: '#/definitions/models.Response'
       tags:
       - Team
   /endInning:
@@ -518,6 +447,8 @@ paths:
       responses:
         "200":
           description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
       tags:
       - Inning
   /endMatch:
@@ -536,9 +467,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Match'
+            $ref: '#/definitions/models.Response'
       tags:
       - Match
+  /forgotPassword:
+    post:
+      consumes:
+      - application/json
+      description: updates the password for a user
+      parameters:
+      - description: email of the user
+        in: body
+        name: email
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Authentication
   /login:
     post:
       consumes:
@@ -558,6 +510,47 @@ paths:
             type: string
       tags:
       - Authentication
+  /resetPassword:
+    post:
+      consumes:
+      - application/json
+      description: Resests the user password
+      parameters:
+      - description: email of the user
+        in: header
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Authentication
+  /retirePlayer:
+    delete:
+      consumes:
+      - application/json
+      description: Shows the list of all the player
+      parameters:
+      - description: Id of the player
+        in: body
+        name: id
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Player
   /showMatch:
     post:
       consumes:
@@ -567,7 +560,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Match'
+            $ref: '#/definitions/models.Response'
       tags:
       - Match
   /showPlayer:
@@ -581,7 +574,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Player'
+            $ref: '#/definitions/models.Response'
         "400":
           description: Bad Request
           schema:
@@ -625,7 +618,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ScoreCard'
+            $ref: '#/definitions/models.Response'
       tags:
       - Scorecard
   /showTeamByID:
@@ -644,7 +637,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Player'
+            $ref: '#/definitions/models.Response'
       tags:
       - Team
   /showTeams:
@@ -662,7 +655,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Team'
+            $ref: '#/definitions/models.Response'
       tags:
       - Team
   /tossResult:
@@ -681,9 +674,30 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Toss'
+            $ref: '#/definitions/models.Response'
       tags:
       - Toss
+  /updatePassword:
+    post:
+      consumes:
+      - application/json
+      description: updates the password for a user
+      parameters:
+      - description: ID of the user whose passsword is to be changed
+        in: body
+        name: user_id
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Authentication
   /userRegister:
     post:
       consumes:
@@ -702,7 +716,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.Credential'
+            $ref: '#/definitions/models.Response'
       tags:
       - Authentication
 swagger: "2.0"

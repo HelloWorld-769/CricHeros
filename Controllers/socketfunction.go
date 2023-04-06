@@ -9,7 +9,7 @@ import (
 
 func GetData(s socketio.Conn, mp map[string]string) {
 	var matchDetail models.MatchRecord
-	db.DB.Where("m_id=?", mp["match_id"]).First(&matchDetail)
+	db.DB.Where("m_id=?", mp["matchId"]).First(&matchDetail)
 
 	var scoreCardRecord []models.ScoreCard
 	db.DB.Where("s_id=?", matchDetail.S_ID).Find(&scoreCardRecord)

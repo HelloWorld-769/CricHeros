@@ -15,15 +15,11 @@ import (
 // @Description Registers a user
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Credential
+// @Success 200 {object} models.Response
 // @Param UserDetails body models.Credential true "Registers a user"
 // @Tags Authentication
 // @Router /adminRegister [post]
 func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var credential models.Credential
@@ -48,11 +44,12 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, "User already exists..", w)
 		return
 	}
-	// bs, err := bcrypt.GenerateFromPassword([]byte(credential.Password), 8)
+	// hashPass, err := u.GenerateHashPassword(credential.Password)
 	// if err != nil {
-	// 	panic(err)
+	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	return
 	// }
-	//credential.Password = string(bs)
+	//credential.Password = string(hashPass)
 	err = db.DB.Create(&credential).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
@@ -65,15 +62,11 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Registers a user
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Credential
+// @Success 200 {object} models.Response
 // @Param UserDetails body models.Credential true "Registers a user"
 // @Tags Authentication
 // @Router /userRegister [post]
 func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var credential models.Credential
@@ -122,10 +115,6 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Authentication
 // @Router /login [post]
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
 	u.EnableCors(&w)
 	var credential models.Credential
 	err := json.NewDecoder(r.Body).Decode(&credential)
@@ -154,20 +143,26 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Description updates the password for a user
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Param email body object true "email of the user"
+// @Tags Authentication
+// @Router /forgotPassword [post]
 func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 
 	u.EnableCors(&w)
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
-
 	if err != nil {
 		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
 		return
 	}
 
 	var cred models.Credential
-	err = db.DB.Where("email=?", mp["email"]).First(&cred).Error
+	err = db.DB.Where("email=?", mp["email"].(string)).First(&cred).Error
 	if err != nil {
 		u.ShowResponse("Failure", http.StatusUnauthorized, "User with this email does not exists", w)
 		return
@@ -189,11 +184,21 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// @Description Resests the user password
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Param token header string true "email of the user"
+// @Tags Authentication
+// @Router /resetPassword [post]
 func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	tokenString := r.Header.Get("token")
-
+	if tokenString == "" {
+		u.ShowResponse("Failure", 400, "Please provide token", w)
+		return
+	}
 	claims := &models.Claims{}
 
 	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -237,22 +242,22 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// @Description Registers a user
+// @Description updates the password for a user
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Credential
+// @Success 200 {object} models.Response
 // @Param user_id body object true "ID of the user whose passsword is to be changed"
 // @Tags Authentication
-// @Router /adminRegister [post]
+// @Router /updatePassword [post]
 func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
 		return
 	}
 	var creds models.Credential
-	db.DB.Where("user_id=?", mp["userId"]).First(&creds)
+	db.DB.Where("user_id=?", mp["userId"].(string)).First(&creds)
 	if mp["role"] != "" {
 		return
 	}
@@ -262,16 +267,22 @@ func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	// 	u.ShowResponse("Failure", 401, "Password not matched", w)
 	// 	return
 	// }
-	if mp["existPassword"] != creds.Password {
+	if mp["existPassword"].(string) != creds.Password {
 		u.ShowResponse("Failure", 401, "Password not matched", w)
 		return
 	}
 
-	if err, ok := u.IsvalidatePass(mp["newPassword"]); !ok {
+	if err, ok := u.IsvalidatePass(mp["newPassword"].(string)); !ok {
 		u.ShowResponse("Failure", 401, err, w)
 		return
 	}
-	creds.Password = mp["newPassword"]
+	// hashPass, err := u.GenerateHashPassword(mp["newPassword"].(string))
+	// if err != nil {
+	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	return
+	// }
+	// creds.Password = string(hashPass)
+	creds.Password = mp["newPassword"].(string)
 	err = db.DB.Where("user_id=?", mp["userId"]).Updates(&creds).Error
 	if err != nil {
 		u.ShowResponse("Failure", 500, "Error in updating the credentials", w)

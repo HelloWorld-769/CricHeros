@@ -34,7 +34,7 @@ func getMaidenOvers(player_id string) int64 {
 
 // @Description stores players info in scorecard
 // @Accept json
-// @Success 200 {object} models.ScoreCard
+// @Success 200 {object} models.Response
 // @Param details body models.CardData true "ScoreCard details"
 // @Tags Scorecard
 // @Router /addToScoreCard [post]
@@ -174,7 +174,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 // @Description Shows the score card for the current matcha
 // @Accept json
-// @Success 200 {object} models.ScoreCard
+// @Success 200 {object} models.Response
 // @Param match_id body object true "Id of the match whose scoredcard is to be viewed"
 // @Tags Scorecard
 // @Router /showScoreCard [post]

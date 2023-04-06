@@ -54,10 +54,14 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 // @Produce json
 // @Tags Ball
 // @Param id query string true "Id of the ball"
-// @Success 200 {object} models.Balls
+// @Success 200 {object} models.Response
 // @Router /ballUpdate [put]
 func UpdateBallRecord(w http.ResponseWriter, r *http.Request) {
 	ball_id := r.URL.Query().Get("id")
+	if ball_id == "" {
+		u.ShowResponse("Failure", 400, "Please provide ball id", w)
+		return
+	}
 	var ballRecord models.Balls
 	err := json.NewDecoder(r.Body).Decode(&ballRecord)
 	if err != nil {

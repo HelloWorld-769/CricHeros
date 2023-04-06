@@ -21,7 +21,7 @@ func getRandomResult() string {
 // @Description Give the random result of coin toss and which team won the toss
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Toss
+// @Success 200 {object} models.Response
 // @Param toss body models.Toss true "Toss Details"
 // @Tags Toss
 // @Router /tossResult [post]
@@ -52,10 +52,10 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Updates the decison taken by the team after wining the toss
 // @Accept json
 // @Produces json
-// @Success 200 {object} models.Toss
+// @Success 200 {object} models.Response
 // @Param toss body models.Toss true "Descision Updated"
 // @Tags Toss
-// @Router /DecisionUpdate [put]
+// @Router /decisionUpdate [put]
 func DecisionUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)

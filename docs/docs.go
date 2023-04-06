@@ -16,36 +16,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/DecisionUpdate": {
-            "put": {
-                "description": "Updates the decison taken by the team after wining the toss",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Toss"
-                ],
-                "parameters": [
-                    {
-                        "description": "Descision Updated",
-                        "name": "toss",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Toss"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Toss"
-                        }
-                    }
-                }
-            }
-        },
         "/addCareer": {
             "post": {
                 "description": "Add player career",
@@ -80,7 +50,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Career"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -118,7 +88,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
                     }
                 }
             }
@@ -147,7 +120,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ScoreCard"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -167,12 +140,12 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "ID of the user whose passsword is to be changed",
-                        "name": "user_id",
+                        "description": "Registers a user",
+                        "name": "UserDetails",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Credential"
                         }
                     }
                 ],
@@ -180,7 +153,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Credential"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -211,7 +184,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Balls"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -241,7 +214,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Match"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -274,7 +247,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Player"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -311,7 +284,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Team"
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/decisionUpdate": {
+            "put": {
+                "description": "Updates the decison taken by the team after wining the toss",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Toss"
+                ],
+                "parameters": [
+                    {
+                        "description": "Descision Updated",
+                        "name": "toss",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Toss"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -348,13 +351,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -382,7 +379,10 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
                     }
                 }
             }
@@ -411,7 +411,40 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Match"
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/forgotPassword": {
+            "post": {
+                "description": "updates the password for a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "email of the user",
+                        "name": "email",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -447,6 +480,70 @@ const docTemplate = `{
                 }
             }
         },
+        "/resetPassword": {
+            "post": {
+                "description": "Resests the user password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "email of the user",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/retirePlayer": {
+            "delete": {
+                "description": "Shows the list of all the player",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Player"
+                ],
+                "parameters": [
+                    {
+                        "description": "Id of the player",
+                        "name": "id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/showMatch": {
             "post": {
                 "description": "Show the list of matches",
@@ -460,7 +557,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Match"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -482,7 +579,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Player"
+                            "$ref": "#/definitions/models.Response"
                         }
                     },
                     "400": {
@@ -551,7 +648,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ScoreCard"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -581,7 +678,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Player"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -609,7 +706,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Team"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -639,7 +736,40 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Toss"
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/updatePassword": {
+            "post": {
+                "description": "updates the password for a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "ID of the user whose passsword is to be changed",
+                        "name": "user_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -672,7 +802,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.Credential"
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -689,45 +819,6 @@ const docTemplate = `{
                 "valid": {
                     "description": "Valid is true if Time is not NULL",
                     "type": "boolean"
-                }
-            }
-        },
-        "models.Balls": {
-            "type": "object",
-            "properties": {
-                "ballCount": {
-                    "type": "integer"
-                },
-                "ballId": {
-                    "type": "string"
-                },
-                "ballType": {
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "isValid": {
-                    "type": "string"
-                },
-                "matchId": {
-                    "type": "string"
-                },
-                "over": {
-                    "type": "number"
-                },
-                "playerId": {
-                    "type": "string"
-                },
-                "runs": {
-                    "description": "runs on that particular ball",
-                    "type": "integer"
-                },
-                "updatedAt": {
-                    "type": "string"
                 }
             }
         },
@@ -955,71 +1046,6 @@ const docTemplate = `{
                 "data": {},
                 "status": {
                     "type": "string"
-                }
-            }
-        },
-        "models.ScoreCard": {
-            "type": "object",
-            "required": [
-                "playerType"
-            ],
-            "properties": {
-                "ballsPlayed": {
-                    "type": "integer"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "economy": {
-                    "type": "number"
-                },
-                "fours": {
-                    "type": "integer"
-                },
-                "isOut": {
-                    "type": "string"
-                },
-                "maidenOvers": {
-                    "type": "integer"
-                },
-                "noBalls": {
-                    "type": "integer"
-                },
-                "oversBowled": {
-                    "type": "integer"
-                },
-                "playerId": {
-                    "type": "string"
-                },
-                "playerType": {
-                    "type": "string"
-                },
-                "runScored": {
-                    "type": "integer"
-                },
-                "runsGiven": {
-                    "type": "integer"
-                },
-                "scorecardId": {
-                    "type": "string"
-                },
-                "sixes": {
-                    "type": "integer"
-                },
-                "strikeRate": {
-                    "type": "number"
-                },
-                "updatedAt": {
-                    "type": "string"
-                },
-                "wickets": {
-                    "type": "integer"
-                },
-                "wideBalls": {
-                    "type": "integer"
                 }
             }
         },

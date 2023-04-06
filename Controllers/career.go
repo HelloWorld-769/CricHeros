@@ -11,7 +11,7 @@ import (
 // @Description Add player career
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Career
+// @Success 200 {object} models.Response
 // @Param id query string true "Player ID"
 // @Param playerCareer body models.Career true "Adds Player career"
 // @Tags Player
@@ -21,7 +21,10 @@ func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	id := r.URL.Query().Get("id")
-
+	if id == "" {
+		u.ShowResponse("Failure", 400, "Please provide id", w)
+		return
+	}
 	var career models.Career
 	err := json.NewDecoder(r.Body).Decode(&career)
 	if err != nil {

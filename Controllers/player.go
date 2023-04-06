@@ -13,7 +13,7 @@ import (
 // @Produce json
 // @Tags Player
 // @Param player body models.Player true "Create Player"
-// @Success 200 {object} models.Player
+// @Success 200 {object} models.Response
 // @Router /createPlayer [post]
 func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
@@ -44,7 +44,7 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Shows the list of all the player
 // @Accept json
 // @Produce json
-// @Success 200 {object} models.Player
+// @Success 200 {object} models.Response
 // @Failure 400 {string} string "Bad Request"
 // @Tags Player
 // @Router /showPlayer [get]
@@ -78,7 +78,6 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
-
 	id := mp["id"]
 	if id == "" {
 		u.ShowResponse("Failure", 400, "Please enter player id", w)
@@ -105,14 +104,22 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 	u.ShowResponse("Success", http.StatusOK, &PlayerData, w)
 }
 
+// @Description Shows the list of all the player
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Param id body object true "Id of the player"
+// @Tags Player
+// @Router /retirePlayer [delete]
 func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {
-	var mp = make(map[string]string)
+	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
-	err = db.DB.Where("p_id=?", mp["playerId"]).Delete(&models.Player{}).Error
+
+	err = db.DB.Where("p_id=?", mp["playerId"].(string)).Delete(&models.Player{}).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
