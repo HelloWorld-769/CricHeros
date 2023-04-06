@@ -4,15 +4,19 @@ import (
 	c "cricHeros/Controllers"
 	db "cricHeros/Database"
 	socket "cricHeros/Socket"
+	_ "cricHeros/docs"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func Routes() {
 	fmt.Println("Listening on port:", os.Getenv("PORT"))
-	mux := http.NewServeMux()
+	mux := mux.NewRouter()
 	err := db.Connect()
 	if err != nil {
 		panic(err)
@@ -59,8 +63,7 @@ func Routes() {
 
 	//Socket Server
 	mux.Handle("/socket.io/", socketServer)
-	// swaggerUI := http.FileServer(http.Dir("./docs/swagger"))
-	// mux.Handle("/swagger/", http.StripPrefix("/swagger/", swaggerUI))
+	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	//Ball Handler
 	mux.HandleFunc("/ballUpdate", c.UpdateBallRecord)
