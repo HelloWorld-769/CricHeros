@@ -27,9 +27,15 @@ func getRandomResult() string {
 // @Router /tossResult [post]
 func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	EnableCors(&w)
+	u.EnableCors(&w)
 	var toss models.Toss
-	json.NewDecoder(r.Body).Decode(&toss)
+	err := json.NewDecoder(r.Body).Decode(&toss)
+
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
 	tossRes := getRandomResult()
 	var team_id string
 	if tossRes == "Head" {
@@ -39,8 +45,8 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	res := team_id + " Won the toss"
 	toss.TossWon = res
-	//db.DB.Create(toss)
-	u.Encode(w, &toss)
+	db.DB.Create(toss)
+	u.ShowResponse("Success", 200, toss, w)
 }
 
 // @Description Updates the decison taken by the team after wining the toss
@@ -52,10 +58,17 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /DecisionUpdate [put]
 func DecisionUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	EnableCors(&w)
+	u.EnableCors(&w)
 	var tossDecision models.Toss
-	json.NewDecoder(r.Body).Decode(&tossDecision)
-	db.DB.Where("toss_id=?", tossDecision.Toss_ID).Updates(&tossDecision)
-	u.Encode(w, &tossDecision)
-
+	err := json.NewDecoder(r.Body).Decode(&tossDecision)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	err = db.DB.Where("toss_id=?", tossDecision.Toss_ID).Updates(&tossDecision).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	u.ShowResponse("Success", 200, tossDecision, w)
 }

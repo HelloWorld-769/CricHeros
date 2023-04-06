@@ -9,25 +9,23 @@ definitions:
     type: object
   models.Balls:
     properties:
-      ball_count:
+      ballCount:
         type: integer
-      ball_id:
+      ballId:
         type: string
-      ball_type:
+      ballType:
         type: string
       createdAt:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      is_valid:
+      isValid:
         type: string
-      match_id:
+      matchId:
         type: string
       over:
         type: number
-      player_id:
+      playerId:
         type: string
       runs:
         description: runs on that particular ball
@@ -37,63 +35,62 @@ definitions:
     type: object
   models.CardData:
     properties:
-      ball_type:
+      ballType:
         type: string
       baller:
         type: string
       batsmen:
         type: string
-      match_id:
+      matchId:
         type: string
-      prev_runs:
+      prevRuns:
         type: integer
       runs:
         type: integer
-      scorecard_id:
-        type: string
+    required:
+    - ballType
+    - baller
+    - batsmen
+    - matchId
     type: object
   models.Career:
     properties:
-      average_score:
+      averageScore:
         type: number
-      balls_bowled:
+      ballsBowled:
         description: Balls Bowled
         type: integer
-      balls_faced:
+      ballsFaced:
         type: integer
-      bowling_average:
+      bowlingAverage:
         type: number
       createdAt:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
       economy:
-        description: BowlSR     float64 `json:"bowl_sr"` //Bowling strike rate
         type: number
       fifties:
-        description: BatSR      float64 `json:"bat_sr"` //batting strike rate
         type: integer
       fours:
         type: integer
-      highest_score:
+      highestScore:
         description: high score
         type: integer
       hundreds:
         type: integer
-      id:
+      matchesPlayed:
         type: integer
-      matches_played:
-        type: integer
-      player_id:
+      playerId:
         type: string
-      run_scored:
+      runScored:
         type: integer
-      runs_conced:
+      runsConced:
         description: Runs Conceded
         type: integer
       sixes:
         type: integer
-      two_hundreds:
+      twoHundreds:
         type: integer
       updatedAt:
         type: string
@@ -106,18 +103,22 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
+      email:
+        type: string
       password:
         type: string
-      phone_no:
+      role:
         type: string
       updatedAt:
         type: string
       user_id:
         type: string
-      username:
+      userName:
         type: string
+    required:
+    - email
+    - password
+    - userName
     type: object
   models.Match:
     properties:
@@ -127,28 +128,30 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      match_id:
+      matchId:
         type: string
-      room_id:
-        type: string
-      scorecard_id:
+      scorecardId:
         description: scorecard related to it
         type: string
       status:
         type: string
-      team1_id:
+      team1Id:
         type: string
-      team2_id:
+      team2Id:
         type: string
       text:
         description: who won the match/
         type: string
       updatedAt:
         type: string
+      userId:
+        type: string
       venue:
         type: string
+    required:
+    - team1Id
+    - team2Id
+    - venue
     type: object
   models.Player:
     properties:
@@ -158,41 +161,36 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      id:
+      jerseyNo:
         type: integer
-      jersey_no:
-        type: integer
-      phone_no:
+      phoneNo:
         type: string
-      player_age:
+      playerAge:
         type: integer
-      player_id:
+      playerId:
         type: string
-      player_name:
+      playerName:
         type: string
       updatedAt:
         type: string
+    required:
+    - country
+    - jerseyNo
+    - phoneNo
+    - playerAge
+    - playerName
     type: object
   models.Response:
     properties:
-      career:
-        $ref: '#/definitions/models.Career'
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
+      code:
         type: integer
-      player:
-        $ref: '#/definitions/models.Player'
-      teams:
-        $ref: '#/definitions/models.TeamList'
-      updatedAt:
+      data: {}
+      status:
         type: string
     type: object
   models.ScoreCard:
     properties:
-      balls_played:
+      ballsPlayed:
         type: integer
       createdAt:
         type: string
@@ -202,36 +200,36 @@ definitions:
         type: number
       fours:
         type: integer
-      id:
-        type: integer
-      is_out:
+      isOut:
         type: string
-      maiden_overs:
+      maidenOvers:
         type: integer
-      no_balls:
+      noBalls:
         type: integer
-      overs_bowled:
+      oversBowled:
         type: integer
-      player_id:
+      playerId:
         type: string
-      player_type:
+      playerType:
         type: string
       runScored:
         type: integer
-      runs_given:
+      runsGiven:
         type: integer
-      scorecard_id:
+      scorecardId:
         type: string
       sixes:
         type: integer
-      strike_rate:
+      strikeRate:
         type: number
       updatedAt:
         type: string
       wickets:
         type: integer
-      wide_balls:
+      wideBalls:
         type: integer
+    required:
+    - playerType
     type: object
   models.Team:
     properties:
@@ -239,37 +237,24 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      player_id:
+      playerId:
         type: string
-      team_captain:
+      teamCaptain:
         type: string
-      team_id:
+      teamId:
         type: string
-      team_name:
+      teamName:
         type: string
-      team_type:
+      teamType:
         type: string
       updatedAt:
         type: string
-      user_id:
+      userId:
         type: string
-    type: object
-  models.TeamList:
-    properties:
-      createdAt:
-        type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
-      id:
-        type: integer
-      p_id:
-        type: string
-      t_id:
-        type: string
-      updatedAt:
-        type: string
+    required:
+    - teamCaptain
+    - teamName
+    - teamType
     type: object
   models.Toss:
     properties:
@@ -285,6 +270,10 @@ definitions:
         type: string
       toss_won:
         type: string
+    required:
+    - head_team
+    - match_id
+    - tail_team
     type: object
 host: localhost:8000
 info:
@@ -381,8 +370,29 @@ paths:
             $ref: '#/definitions/models.ScoreCard'
       tags:
       - Scorecard
-  /ballUpdate:
+  /adminRegister:
     post:
+      consumes:
+      - application/json
+      description: Registers a user
+      parameters:
+      - description: ID of the user whose passsword is to be changed
+        in: body
+        name: user_id
+        required: true
+        schema:
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Credential'
+      tags:
+      - Authentication
+  /ballUpdate:
+    put:
       consumes:
       - application/json
       description: Update the ball
@@ -548,27 +558,6 @@ paths:
             type: string
       tags:
       - Authentication
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: Registers a user
-      parameters:
-      - description: Registers a user
-        in: body
-        name: UserDetails
-        required: true
-        schema:
-          $ref: '#/definitions/models.Credential'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Credential'
-      tags:
-      - Authentication
   /showMatch:
     post:
       consumes:
@@ -695,4 +684,25 @@ paths:
             $ref: '#/definitions/models.Toss'
       tags:
       - Toss
+  /userRegister:
+    post:
+      consumes:
+      - application/json
+      description: Registers a user
+      parameters:
+      - description: Registers a user
+        in: body
+        name: UserDetails
+        required: true
+        schema:
+          $ref: '#/definitions/models.Credential'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Credential'
+      tags:
+      - Authentication
 swagger: "2.0"

@@ -5,7 +5,6 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -17,23 +16,29 @@ import (
 // @Success 200 {object} models.Player
 // @Router /createPlayer [post]
 func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
+
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		fmt.Println("Error in decoding the body")
+		u.ShowResponse("Failure", 400, "Error in decoding the json body", w)
 		return
 	}
-	db.DB.Create(&player)
+
+	validationErr := u.CheckValidation(player)
+	if validationErr != nil {
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		return
+	}
+
+	err = db.DB.Create(&player).Error
 	if err != nil {
-		fmt.Println("Error in inserting data: ", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		u.ShowResponse("Failure", http.StatusInternalServerError, "Error in inserting the data", w)
 		return
 	}
 
-	u.Encode(w, &player)
-
+	u.ShowResponse("Success", http.StatusOK, &player, w)
 }
 
 // @Description Shows the list of all the player
@@ -44,16 +49,16 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Player
 // @Router /showPlayer [get]
 func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
-	EnableCors(&w)
+	u.EnableCors(&w)
 	u.SetHeader(w)
 	var players []models.Player
 	err := db.DB.Find(&players).Error
 	if err != nil {
-		fmt.Println("Error in extracting the data from the database", err)
+		u.ShowResponse("Failure", http.StatusInternalServerError, err.Error(), w)
 		return
 	}
 
-	u.Encode(w, &players)
+	u.ShowResponse("Success", http.StatusOK, &players, w)
 }
 
 // @Description Shows the list of all the player
@@ -64,18 +69,55 @@ func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Player
 // @Router /showPlayerID [get]
 func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	EnableCors(&w)
-	var PlayerData models.Response
+	u.SetHeader(w)
+	u.EnableCors(&w)
+	var PlayerData models.PlayerData
 	var mp = make(map[string]string)
-	json.NewDecoder(r.Body).Decode(&mp)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
 	id := mp["id"]
+	if id == "" {
+		u.ShowResponse("Failure", 400, "Please enter player id", w)
+		return
+	}
 
-	db.DB.Table("players").Where("p_id=?", id).Scan(&PlayerData.Player)
+	err = db.DB.Table("players").Where("p_id=?", id).Scan(&PlayerData.Player).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
-	db.DB.Table("careers").Where("p_id=?", id).Scan(&PlayerData.Career)
+	err = db.DB.Table("careers").Where("p_id=?", id).Scan(&PlayerData.Career).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
-	db.DB.Table("team_lists").Where("p_id=?", id).Scan(&PlayerData.Teams)
+	err = db.DB.Table("team_lists").Where("p_id=?", id).Scan(&PlayerData.Teams).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	u.ShowResponse("Success", http.StatusOK, &PlayerData, w)
+}
 
-	u.Encode(w, &PlayerData)
+func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {
+	var mp = make(map[string]string)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	err = db.DB.Where("p_id=?", mp["playerId"]).Delete(&models.Player{}).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
+	u.ShowResponse("Success", http.StatusOK, "Player Deleted sucessfullly", w)
+
 }

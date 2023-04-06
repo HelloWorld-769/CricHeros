@@ -153,8 +153,41 @@ const docTemplate = `{
                 }
             }
         },
-        "/ballUpdate": {
+        "/adminRegister": {
             "post": {
+                "description": "Registers a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "ID of the user whose passsword is to be changed",
+                        "name": "user_id",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Credential"
+                        }
+                    }
+                }
+            }
+        },
+        "/ballUpdate": {
+            "put": {
                 "description": "Update the ball",
                 "consumes": [
                     "application/json"
@@ -414,39 +447,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/register": {
-            "post": {
-                "description": "Registers a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "parameters": [
-                    {
-                        "description": "Registers a user",
-                        "name": "UserDetails",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Credential"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Credential"
-                        }
-                    }
-                }
-            }
-        },
         "/showMatch": {
             "post": {
                 "description": "Show the list of matches",
@@ -644,6 +644,39 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/userRegister": {
+            "post": {
+                "description": "Registers a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "Registers a user",
+                        "name": "UserDetails",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Credential"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Credential"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -662,13 +695,13 @@ const docTemplate = `{
         "models.Balls": {
             "type": "object",
             "properties": {
-                "ball_count": {
+                "ballCount": {
                     "type": "integer"
                 },
-                "ball_id": {
+                "ballId": {
                     "type": "string"
                 },
-                "ball_type": {
+                "ballType": {
                     "type": "string"
                 },
                 "createdAt": {
@@ -677,19 +710,16 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "is_valid": {
+                "isValid": {
                     "type": "string"
                 },
-                "match_id": {
+                "matchId": {
                     "type": "string"
                 },
                 "over": {
                     "type": "number"
                 },
-                "player_id": {
+                "playerId": {
                     "type": "string"
                 },
                 "runs": {
@@ -703,8 +733,14 @@ const docTemplate = `{
         },
         "models.CardData": {
             "type": "object",
+            "required": [
+                "ballType",
+                "baller",
+                "batsmen",
+                "matchId"
+            ],
             "properties": {
-                "ball_type": {
+                "ballType": {
                     "type": "string"
                 },
                 "baller": {
@@ -713,34 +749,31 @@ const docTemplate = `{
                 "batsmen": {
                     "type": "string"
                 },
-                "match_id": {
+                "matchId": {
                     "type": "string"
                 },
-                "prev_runs": {
+                "prevRuns": {
                     "type": "integer"
                 },
                 "runs": {
                     "type": "integer"
-                },
-                "scorecard_id": {
-                    "type": "string"
                 }
             }
         },
         "models.Career": {
             "type": "object",
             "properties": {
-                "average_score": {
+                "averageScore": {
                     "type": "number"
                 },
-                "balls_bowled": {
+                "ballsBowled": {
                     "description": "Balls Bowled",
                     "type": "integer"
                 },
-                "balls_faced": {
+                "ballsFaced": {
                     "type": "integer"
                 },
-                "bowling_average": {
+                "bowlingAverage": {
                     "type": "number"
                 },
                 "createdAt": {
@@ -750,43 +783,38 @@ const docTemplate = `{
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "economy": {
-                    "description": "BowlSR     float64 ` + "`" + `json:\"bowl_sr\"` + "`" + ` //Bowling strike rate",
                     "type": "number"
                 },
                 "fifties": {
-                    "description": "BatSR      float64 ` + "`" + `json:\"bat_sr\"` + "`" + ` //batting strike rate",
                     "type": "integer"
                 },
                 "fours": {
                     "type": "integer"
                 },
-                "highest_score": {
+                "highestScore": {
                     "description": "high score",
                     "type": "integer"
                 },
                 "hundreds": {
                     "type": "integer"
                 },
-                "id": {
+                "matchesPlayed": {
                     "type": "integer"
                 },
-                "matches_played": {
-                    "type": "integer"
-                },
-                "player_id": {
+                "playerId": {
                     "type": "string"
                 },
-                "run_scored": {
+                "runScored": {
                     "type": "integer"
                 },
-                "runs_conced": {
+                "runsConced": {
                     "description": "Runs Conceded",
                     "type": "integer"
                 },
                 "sixes": {
                     "type": "integer"
                 },
-                "two_hundreds": {
+                "twoHundreds": {
                     "type": "integer"
                 },
                 "updatedAt": {
@@ -799,6 +827,11 @@ const docTemplate = `{
         },
         "models.Credential": {
             "type": "object",
+            "required": [
+                "email",
+                "password",
+                "userName"
+            ],
             "properties": {
                 "createdAt": {
                     "type": "string"
@@ -806,28 +839,33 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "id": {
-                    "type": "integer"
+                "email": {
+                    "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
-                "phone_no": {
+                "role": {
                     "type": "string"
                 },
                 "updatedAt": {
                     "type": "string"
                 },
-                "user_id": {
+                "userName": {
                     "type": "string"
                 },
-                "username": {
+                "user_id": {
                     "type": "string"
                 }
             }
         },
         "models.Match": {
             "type": "object",
+            "required": [
+                "team1Id",
+                "team2Id",
+                "venue"
+            ],
             "properties": {
                 "createdAt": {
                     "type": "string"
@@ -838,26 +876,20 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "match_id": {
+                "matchId": {
                     "type": "string"
                 },
-                "room_id": {
-                    "type": "string"
-                },
-                "scorecard_id": {
+                "scorecardId": {
                     "description": "scorecard related to it",
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
                 },
-                "team1_id": {
+                "team1Id": {
                     "type": "string"
                 },
-                "team2_id": {
+                "team2Id": {
                     "type": "string"
                 },
                 "text": {
@@ -867,6 +899,9 @@ const docTemplate = `{
                 "updatedAt": {
                     "type": "string"
                 },
+                "userId": {
+                    "type": "string"
+                },
                 "venue": {
                     "type": "string"
                 }
@@ -874,6 +909,13 @@ const docTemplate = `{
         },
         "models.Player": {
             "type": "object",
+            "required": [
+                "country",
+                "jerseyNo",
+                "phoneNo",
+                "playerAge",
+                "playerName"
+            ],
             "properties": {
                 "country": {
                     "type": "string"
@@ -884,22 +926,19 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "id": {
+                "jerseyNo": {
                     "type": "integer"
                 },
-                "jersey_no": {
-                    "type": "integer"
-                },
-                "phone_no": {
+                "phoneNo": {
                     "type": "string"
                 },
-                "player_age": {
+                "playerAge": {
                     "type": "integer"
                 },
-                "player_id": {
+                "playerId": {
                     "type": "string"
                 },
-                "player_name": {
+                "playerName": {
                     "type": "string"
                 },
                 "updatedAt": {
@@ -910,33 +949,22 @@ const docTemplate = `{
         "models.Response": {
             "type": "object",
             "properties": {
-                "career": {
-                    "$ref": "#/definitions/models.Career"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
+                "code": {
                     "type": "integer"
                 },
-                "player": {
-                    "$ref": "#/definitions/models.Player"
-                },
-                "teams": {
-                    "$ref": "#/definitions/models.TeamList"
-                },
-                "updatedAt": {
+                "data": {},
+                "status": {
                     "type": "string"
                 }
             }
         },
         "models.ScoreCard": {
             "type": "object",
+            "required": [
+                "playerType"
+            ],
             "properties": {
-                "balls_played": {
+                "ballsPlayed": {
                     "type": "integer"
                 },
                 "createdAt": {
@@ -951,40 +979,37 @@ const docTemplate = `{
                 "fours": {
                     "type": "integer"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "is_out": {
+                "isOut": {
                     "type": "string"
                 },
-                "maiden_overs": {
+                "maidenOvers": {
                     "type": "integer"
                 },
-                "no_balls": {
+                "noBalls": {
                     "type": "integer"
                 },
-                "overs_bowled": {
+                "oversBowled": {
                     "type": "integer"
                 },
-                "player_id": {
+                "playerId": {
                     "type": "string"
                 },
-                "player_type": {
+                "playerType": {
                     "type": "string"
                 },
                 "runScored": {
                     "type": "integer"
                 },
-                "runs_given": {
+                "runsGiven": {
                     "type": "integer"
                 },
-                "scorecard_id": {
+                "scorecardId": {
                     "type": "string"
                 },
                 "sixes": {
                     "type": "integer"
                 },
-                "strike_rate": {
+                "strikeRate": {
                     "type": "number"
                 },
                 "updatedAt": {
@@ -993,13 +1018,18 @@ const docTemplate = `{
                 "wickets": {
                     "type": "integer"
                 },
-                "wide_balls": {
+                "wideBalls": {
                     "type": "integer"
                 }
             }
         },
         "models.Team": {
             "type": "object",
+            "required": [
+                "teamCaptain",
+                "teamName",
+                "teamType"
+            ],
             "properties": {
                 "createdAt": {
                     "type": "string"
@@ -1007,57 +1037,36 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "player_id": {
+                "playerId": {
                     "type": "string"
                 },
-                "team_captain": {
+                "teamCaptain": {
                     "type": "string"
                 },
-                "team_id": {
+                "teamId": {
                     "type": "string"
                 },
-                "team_name": {
+                "teamName": {
                     "type": "string"
                 },
-                "team_type": {
+                "teamType": {
                     "type": "string"
                 },
                 "updatedAt": {
                     "type": "string"
                 },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.TeamList": {
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "p_id": {
-                    "type": "string"
-                },
-                "t_id": {
-                    "type": "string"
-                },
-                "updatedAt": {
+                "userId": {
                     "type": "string"
                 }
             }
         },
         "models.Toss": {
             "type": "object",
+            "required": [
+                "head_team",
+                "match_id",
+                "tail_team"
+            ],
             "properties": {
                 "decision": {
                     "type": "string"
