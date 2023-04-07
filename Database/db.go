@@ -2,6 +2,7 @@ package database
 
 import (
 	models "cricHeros/Models"
+	"errors"
 	"fmt"
 	"os"
 
@@ -17,16 +18,14 @@ func Connect() error {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		fmt.Println("Error in connecting to database: ", err)
-		return err
+		return errors.New("error in connecting to database")
 	}
 	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`
 	db.Exec(query)
 	DB = db
 	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credential{}, &models.Balls{}, &models.ScoreCard{}, &models.MatchRecord{}, &models.TeamList{}, &models.Inning{}, &models.Toss{})
 	if err != nil {
-		fmt.Println("Error in creating the tables..")
-		return err
+		return errors.New("error in creating the tables")
 	}
 	fmt.Println("Succesfully connected to database...")
 	return nil

@@ -16,14 +16,11 @@ import (
 
 var twilioClient *twilio.RestClient
 
-var TWILIO_ACCOUNT_SID = "AC91f8080ddd3e52c96186ad9fc32d2f14"
-
 func TwilioInit(password string) {
 	twilioClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: TWILIO_ACCOUNT_SID,
+		Username: u.TWILIO_ACCOUNT_SID,
 		Password: password,
 	})
-
 }
 
 // // twilio client interface
@@ -98,6 +95,7 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 		userDetails.IsLoggedIn = true
 		tokenString := u.CreateToken(userDetails)
 		db.DB.Where("user_id=?", userDetails.User_ID).Updates(userDetails)
+		userDetails.Token = tokenString
 		u.ShowResponse("Success", 200, tokenString, w)
 
 		return

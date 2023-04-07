@@ -143,6 +143,7 @@ type CardData struct {
 	PrevRuns  int64  `json:"prevRuns"`
 }
 type Credential struct {
+	Token       string `json:"token"`
 	User_ID     string `json:"user_id" gorm:"default:uuid_generate_v4()"`
 	Username    string `json:"userName"  validate:"required"`
 	PhoneNumber string `json:"phoneNumber" validate:"required" gorm:"unique"`

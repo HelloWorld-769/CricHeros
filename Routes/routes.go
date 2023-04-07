@@ -25,22 +25,6 @@ func Routes() {
 	socketServer := socket.SocketInit()
 	defer socketServer.Close()
 
-	//Player routes
-	mux.HandleFunc("/createPlayer", c.AddPlayerHandler).Methods("POST")
-	mux.HandleFunc("/showPlayer", c.ShowPlayerHandler).Methods("GET")
-	mux.HandleFunc("/showPlayerID", c.ShowPlayerByIDHandler).Methods("POST")
-	mux.HandleFunc("/retirePlayer", c.DeletePlayerHandler).Methods("DELETE")
-
-	//Career routes
-	mux.HandleFunc("/addCareer", c.AddCareerHandler).Methods("POST")
-
-	//team routes
-	mux.HandleFunc("/createTeam", c.CreateTeamHandler).Methods("POST")
-	mux.HandleFunc("/addPlayertoTeam", c.AddPlayertoTeamHandler).Methods("POST")
-	mux.HandleFunc("/showTeams", c.ShowTeamsHandler).Methods("GET")
-	mux.HandleFunc("/showTeamByID", c.ShowTeamByIDHandler).Methods("POST")
-	mux.HandleFunc("/deleteTeamByID", c.DeleteTeamHandler).Methods("DELETE")
-
 	//Authentication Handler
 	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler).Methods("POST")
 	mux.HandleFunc("/userRegister", c.UserRegisterHandler).Methods("POST")
@@ -49,25 +33,40 @@ func Routes() {
 	mux.HandleFunc("/logout", c.LogOut).Methods("GET")
 	mux.HandleFunc("/updateProfile", c.UpdateProfile).Methods("POST")
 
+	//Player routes
+	mux.Handle("/createPlayer", c.LoginMiddlerware(http.HandlerFunc(c.AddPlayerHandler))).Methods("POST")
+	mux.Handle("/showPlayer", c.LoginMiddlerware(http.HandlerFunc(c.ShowPlayerHandler))).Methods("GET")
+	mux.Handle("/showPlayerID", c.LoginMiddlerware(http.HandlerFunc(c.ShowPlayerByIDHandler))).Methods("POST")
+	mux.Handle("/retirePlayer", c.LoginMiddlerware(http.HandlerFunc(c.DeletePlayerHandler))).Methods("DELETE")
+
+	//Career routes
+	mux.Handle("/addCareer", c.LoginMiddlerware(http.HandlerFunc(c.AddCareerHandler))).Methods("POST")
+
+	//team routes
+	mux.Handle("/createTeam", c.LoginMiddlerware(http.HandlerFunc(c.CreateTeamHandler))).Methods("POST")
+	mux.Handle("/addPlayertoTeam", c.LoginMiddlerware(http.HandlerFunc(c.AddPlayertoTeamHandler))).Methods("POST")
+	mux.Handle("/showTeams", c.LoginMiddlerware(http.HandlerFunc(c.ShowTeamsHandler))).Methods("GET")
+	mux.Handle("/showTeamByID", c.LoginMiddlerware(http.HandlerFunc(c.ShowTeamByIDHandler))).Methods("POST")
+	mux.Handle("/deleteTeamByID", c.LoginMiddlerware(http.HandlerFunc(c.DeleteTeamHandler))).Methods("DELETE")
+
 	//Match routes
-	mux.Handle("/createMatch", c.AdminMiddlerware(http.HandlerFunc(c.CreateMatchHandler))).Methods("POST")
-	mux.HandleFunc("/showMatch", c.ShowMatchHandler).Methods("GET")
-	mux.Handle("/endMatch", c.AdminMiddlerware(http.HandlerFunc(c.EndMatchHandler))).Methods("POST")
+	mux.Handle("/createMatch", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.CreateMatchHandler)))).Methods("POST")
+	mux.Handle("/showMatch", c.LoginMiddlerware(http.HandlerFunc(c.ShowMatchHandler))).Methods("GET")
+	mux.Handle("/endMatch", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.EndMatchHandler)))).Methods("POST")
+	mux.Handle("/showMatchById", c.LoginMiddlerware(http.HandlerFunc(c.ShowMatchById))).Methods("POST")
 
 	//score card routes
-	mux.Handle("/addToScoreCard", c.AdminMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler))).Methods("POST")
+	mux.Handle("/addToScoreCard", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler)))).Methods("POST")
 
 	//Innings routes
-	mux.Handle("/endInning", c.AdminMiddlerware(http.HandlerFunc(c.EndInningHandler))).Methods("POST")
+	mux.Handle("/endInning", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.EndInningHandler)))).Methods("POST")
 
 	//Toss Routes
-	mux.Handle("/tossResult", c.AdminMiddlerware(http.HandlerFunc(c.TossResultHandler))).Methods("POST")
-	mux.Handle("/decisionUpdate", c.AdminMiddlerware(http.HandlerFunc(c.DecisionUpdateHandler))).Methods("POST")
+	mux.Handle("/tossResult", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.TossResultHandler)))).Methods("POST")
+	mux.Handle("/decisionUpdate", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.DecisionUpdateHandler)))).Methods("POST")
 
 	//Ball Handler
-	mux.Handle("/ballUpdate", c.AdminMiddlerware(http.HandlerFunc(c.UpdateBallRecord))).Methods("POST")
-
-	mux.HandleFunc("/showMatchById", c.ShowMatchById).Methods("POST")
+	mux.Handle("/ballUpdate", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.UpdateBallRecord)))).Methods("POST")
 
 	//Socket Server
 	mux.Handle("/socket.io/", socketServer)

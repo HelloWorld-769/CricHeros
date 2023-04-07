@@ -89,7 +89,7 @@ func DecodeToken(tokenString string) (models.Claims, error) {
 		return []byte(os.Getenv("SECRET_KEY")), nil
 	})
 	if err != nil || !parsedToken.Valid {
-		return *claims, fmt.Errorf("Invalid or expired token")
+		return *claims, fmt.Errorf("invalid or expired token")
 	}
 	return *claims, nil
 }
