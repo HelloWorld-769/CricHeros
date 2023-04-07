@@ -44,6 +44,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	//var mp = make(map[string]interface{})
 	var scoreCardData models.CardData
+	var matchMapping models.MatchRecord
 	err := json.NewDecoder(r.Body).Decode(&scoreCardData)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -56,7 +57,6 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var matchMapping models.MatchRecord
 	err = db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchMapping).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -191,6 +191,8 @@ func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var mp = make(map[string]string)
+	var matchMapping models.MatchRecord
+	var matchScoreRecord []models.ScoreCard
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -206,14 +208,12 @@ func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var matchMapping models.MatchRecord
 	err = db.DB.Where("m_id=?", mp["matchId"]).First(&matchMapping).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
-	var matchScoreRecord []models.ScoreCard
 	err = db.DB.Where("s_id=?", matchMapping.S_ID).Find(&matchScoreRecord).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)

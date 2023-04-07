@@ -20,6 +20,7 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]interface{})
+	var teamData []models.Team
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -35,7 +36,7 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	var teamData []models.Team
+
 	err = db.DB.Where("t_id=?", mp["teamId"].(string)).Find(&teamData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)

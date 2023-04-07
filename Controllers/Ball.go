@@ -57,12 +57,13 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 // @Success 200 {object} models.Response
 // @Router /ballUpdate [put]
 func UpdateBallRecord(w http.ResponseWriter, r *http.Request) {
+	var ballRecord models.Balls
 	ball_id := r.URL.Query().Get("id")
 	if ball_id == "" {
 		u.ShowResponse("Failure", 400, "Please provide ball id", w)
 		return
 	}
-	var ballRecord models.Balls
+
 	err := json.NewDecoder(r.Body).Decode(&ballRecord)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)

@@ -5,9 +5,7 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"time"
 
-	"github.com/golang-jwt/jwt/v4"
 	"github.com/twilio/twilio-go"
 
 	"net/http"
@@ -18,9 +16,11 @@ import (
 
 var twilioClient *twilio.RestClient
 
+var TWILIO_ACCOUNT_SID = "AC91f8080ddd3e52c96186ad9fc32d2f14"
+
 func TwilioInit(password string) {
 	twilioClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: u.TWILIO_ACCOUNT_SID,
+		Username: TWILIO_ACCOUNT_SID,
 		Password: password,
 	})
 
@@ -38,6 +38,7 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 
 	var mp = make(map[string]interface{})
+	var exists bool
 
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
@@ -46,7 +47,7 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Check for number
-	var exists bool
+
 	err = db.DB.Raw("SELECT EXISTS(SELECT 1 FROM credentials WHERE phone_number=?)", mp["phoneNumber"]).Scan(&exists).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
@@ -134,6 +135,8 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 
 	var Credential models.Credential
+	var existRecord models.Credential
+
 	err := json.NewDecoder(r.Body).Decode(&Credential)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -141,7 +144,6 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	Credential.Role = "admin"
 
-	var existRecord models.Credential
 	err = db.DB.Where("phone_number=?", Credential.PhoneNumber).First(&existRecord).Error
 	if err == nil {
 		u.ShowResponse("Failure", 400, "User already register please login to contnue", w)
@@ -167,6 +169,7 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 
 	var Credential models.Credential
+
 	err := json.NewDecoder(r.Body).Decode(&Credential)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -199,7 +202,7 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
+	//claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
 	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserID).Update("is_logged_in", false)
 	u.ShowResponse("Success", 200, "Logged out successfully", w)
 

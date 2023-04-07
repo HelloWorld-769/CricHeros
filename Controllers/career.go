@@ -20,12 +20,13 @@ func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
 
 	u.EnableCors(&w)
 	u.SetHeader(w)
+	var career models.Career
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		u.ShowResponse("Failure", 400, "Please provide id", w)
 		return
 	}
-	var career models.Career
+
 	err := json.NewDecoder(r.Body).Decode(&career)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)

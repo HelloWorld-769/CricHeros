@@ -29,6 +29,7 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var toss models.Toss
+	var team_id string
 	err := json.NewDecoder(r.Body).Decode(&toss)
 
 	if err != nil {
@@ -37,7 +38,7 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tossRes := getRandomResult()
-	var team_id string
+
 	if tossRes == "Head" {
 		team_id = toss.T1_ID
 	} else {

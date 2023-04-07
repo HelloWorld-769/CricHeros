@@ -25,12 +25,14 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	claims := r.Context().Value("claims").(*models.Claims)
 	var match models.Match
+	var count int64
+
 	err := json.NewDecoder(r.Body).Decode(&match)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	var count int64
+
 	query := "SELECT * FROM teams where t_id=? and p_id IN (SELECT p_id FROM teams WHERE t_id=? )"
 	db.DB.Raw(query, match.T1_ID, match.T2_ID).Count(&count)
 	fmt.Println("Count is: ", count)
@@ -87,6 +89,11 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	claims := r.Context().Value("claims").(*models.Claims)
 	var mp = make(map[string]interface{})
+	var matchData models.Match
+	var scorecard models.MatchRecord
+	var records []models.ScoreCard
+	var teamsRuns []models.Inning
+
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -106,7 +113,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	EndInningHandler2(mp, w)
 
 	//get match data to update its status to completed
-	var matchData models.Match
+
 	err = db.DB.Where("s_id", mp["matchId"].(string)).Find(&matchData).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -127,7 +134,6 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	matchData.Status = "Completed"
 
 	//find the scorecard relatedd to that match
-	var scorecard models.MatchRecord
 	err = db.DB.Where("m_id=?", mp["matchId"].(string)).First(&scorecard).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -135,7 +141,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch all the score and update the result
-	var records []models.ScoreCard
+
 	err = db.DB.Where("s_id", scorecard.S_ID).Find(&records).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -179,14 +185,12 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var teamsRuns []models.Inning
 	err = db.DB.Where("m_id=?", mp["matchId"].(string)).Find(&teamsRuns).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
-	fmt.Println("jdfj:", teamsRuns)
 	if teamsRuns[0].TScore > teamsRuns[1].TScore {
 		matchData.Text = teamsRuns[0].T_ID + " Won the match"
 	} else {

@@ -23,6 +23,7 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
+
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return

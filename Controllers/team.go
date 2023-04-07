@@ -59,7 +59,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var mp = make(map[string][]string)
-
+	var team models.Team
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -71,7 +71,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, "Please provide team id", w)
 		return
 	}
-	var team models.Team
+
 	err = db.DB.Where("t_id=?", id).First(&team).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -86,8 +86,16 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 			P_ID: p,
 			T_ID: id,
 		}
-		db.DB.Create(&teamList)
-		db.DB.Create(&team)
+		err := db.DB.Create(&teamList).Error
+		if err != nil {
+			u.ShowResponse("Failure", 500, "Internal Server Error", w)
+			return
+		}
+		err = db.DB.Create(&team).Error
+		if err != nil {
+			u.ShowResponse("Failure", 500, "Internal Server Error", w)
+			return
+		}
 	}
 	err = db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id).Error
 	if err != nil {
@@ -111,6 +119,7 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
+	var teams []models.Team
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -127,7 +136,6 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	id := mp["userId"]
 
-	var teams []models.Team
 	query := "SELECT DISTINCT t_id,t_name,t_captain,t_type FROM teams where u_id=?"
 	err = db.DB.Raw(query, id).Scan(&teams).Error
 	if err != nil {
@@ -150,6 +158,8 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var mp = make(map[string]string)
+	var team models.Team
+	var player []string
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -158,8 +168,7 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	t_id := mp["teamId"]
 	u_id := mp["userId"]
-	var team models.Team
-	var player []string
+
 	//var players []string
 	query := "SELECT t_id,t_name,t_captain,t_type FROM teams WHERE t_id =?"
 	err = db.DB.Raw(query, t_id).Scan(&team).Error
