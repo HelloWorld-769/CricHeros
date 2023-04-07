@@ -128,7 +128,7 @@ const docTemplate = `{
         },
         "/adminRegister": {
             "post": {
-                "description": "Registers a user",
+                "description": "Registers a admin",
                 "consumes": [
                     "application/json"
                 ],
@@ -140,7 +140,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Registers a user",
+                        "description": "Registers a admin",
                         "name": "UserDetails",
                         "in": "body",
                         "required": true,
@@ -417,72 +417,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/forgotPassword": {
-            "post": {
-                "description": "updates the password for a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "parameters": [
-                    {
-                        "description": "email of the user",
-                        "name": "email",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.Response"
-                        }
-                    }
-                }
-            }
-        },
-        "/login": {
-            "post": {
-                "description": "Login a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Authentication"
-                ],
-                "parameters": [
-                    {
-                        "description": "Log in the user",
-                        "name": "UserDetails",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.Credential"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/resetPassword": {
-            "post": {
-                "description": "Resests the user password",
+        "/logOut": {
+            "get": {
+                "description": "Logs out a user",
                 "consumes": [
                     "application/json"
                 ],
@@ -495,7 +432,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "email of the user",
+                        "description": "token generated for the user",
                         "name": "token",
                         "in": "header",
                         "required": true
@@ -775,9 +712,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/updatePassword": {
+        "/updateProfile": {
             "post": {
-                "description": "updates the password for a user",
+                "description": "Updates the data of the user",
                 "consumes": [
                     "application/json"
                 ],
@@ -789,12 +726,19 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "ID of the user whose passsword is to be changed",
-                        "name": "user_id",
+                        "type": "string",
+                        "description": "token generated for the user",
+                        "name": "token",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "user updated datas",
+                        "name": "userDetails",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "$ref": "#/definitions/models.Credential"
                         }
                     }
                 ],
@@ -952,8 +896,7 @@ const docTemplate = `{
         "models.Credential": {
             "type": "object",
             "required": [
-                "email",
-                "password",
+                "phoneNumber",
                 "userName"
             ],
             "properties": {
@@ -963,10 +906,10 @@ const docTemplate = `{
                 "deletedAt": {
                     "$ref": "#/definitions/gorm.DeletedAt"
                 },
-                "email": {
-                    "type": "string"
+                "isLoggedIn": {
+                    "type": "boolean"
                 },
-                "password": {
+                "phoneNumber": {
                     "type": "string"
                 },
                 "role": {

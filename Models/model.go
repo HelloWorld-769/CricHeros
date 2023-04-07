@@ -143,14 +143,14 @@ type CardData struct {
 	PrevRuns  int64  `json:"prevRuns"`
 }
 type Credential struct {
-	User_ID   string `json:"user_id" gorm:"default:uuid_generate_v4()"`
-	Username  string `json:"userName"  validate:"required"`
-	Email     string `json:"email" gorm:"unique"  validate:"required,email"`
-	Role      string `json:"role"`
-	Password  string `json:"password" validate:"required"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	DeletedAt gorm.DeletedAt `gorm:"index"`
+	User_ID     string `json:"user_id" gorm:"default:uuid_generate_v4()"`
+	Username    string `json:"userName"  validate:"required"`
+	PhoneNumber string `json:"phoneNumber" validate:"required" gorm:"unique"`
+	Role        string `json:"role"`
+	IsLoggedIn  bool   `json:"isLoggedIn" gorm:"default:false"`
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	DeletedAt   gorm.DeletedAt `gorm:"index"`
 }
 
 type Claims struct {

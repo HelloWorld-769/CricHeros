@@ -44,10 +44,10 @@ func Routes() {
 	//Authentication Handler
 	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler).Methods("POST")
 	mux.HandleFunc("/userRegister", c.UserRegisterHandler).Methods("POST")
-	mux.HandleFunc("/login", c.LoginHandler).Methods("POST")
-	mux.HandleFunc("/forgotPassword", c.ForgotPasswordHandler).Methods("POST")
-	mux.HandleFunc("/resetPassword", c.ResetPasswordHandler).Methods("POST")
-	mux.HandleFunc("/updatePassword", c.UpdatePasswordHandler).Methods("PUT")
+	mux.HandleFunc("/sendOTP", c.SendOtpHandler).Methods("POST")
+	mux.HandleFunc("/verifyOTP", c.VerifyOTPHandler).Methods("POST")
+	mux.HandleFunc("/logout", c.LogOut).Methods("GET")
+	mux.HandleFunc("/updateProfile", c.UpdateProfile).Methods("POST")
 
 	//Match routes
 	mux.Handle("/createMatch", c.AdminMiddlerware(http.HandlerFunc(c.CreateMatchHandler))).Methods("POST")

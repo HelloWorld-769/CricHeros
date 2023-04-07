@@ -40,7 +40,6 @@ func SetHeader(w http.ResponseWriter) {
 }
 
 func CreateToken(tokenPayload models.Credential) string {
-	fmt.Println("payload: ", tokenPayload)
 
 	expirationTime := time.Now().Add(10 * time.Minute)
 	claims := models.Claims{
@@ -78,4 +77,19 @@ func CheckMapValidation(data interface{}) error {
 		return validationErr
 	}
 	return nil
+}
+
+func DecodeToken(tokenString string) (models.Claims, error) {
+	claims := &models.Claims{}
+
+	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("error")
+		}
+		return []byte(os.Getenv("SECRET_KEY")), nil
+	})
+	if err != nil || !parsedToken.Valid {
+		return *claims, fmt.Errorf("Invalid or expired token")
+	}
+	return *claims, nil
 }

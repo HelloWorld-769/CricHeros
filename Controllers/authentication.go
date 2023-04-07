@@ -5,59 +5,155 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"fmt"
-	"net/http"
-	"net/smtp"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/twilio/twilio-go"
+
+	"net/http"
+	"os"
+
+	openapi "github.com/twilio/twilio-go/rest/verify/v2"
 )
 
-// @Description Registers a user
+var twilioClient *twilio.RestClient
+
+func TwilioInit(password string) {
+	twilioClient = twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: u.TWILIO_ACCOUNT_SID,
+		Password: password,
+	})
+
+}
+
+// // twilio client interface
+// var client *twilio.RestClient = twilio.NewRestClientWithParams(twilio.ClientParams{
+// 	Username: u.TWILIO_ACCOUNT_SID,
+// 	Password: u.TWILIO_AUTH_TOKEN,
+// })
+
+// send OTP to user
+func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	u.EnableCors(&w)
+
+	var mp = make(map[string]interface{})
+
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	// Check for number
+	var exists bool
+	err = db.DB.Raw("SELECT EXISTS(SELECT 1 FROM credentials WHERE phone_number=?)", mp["phoneNumber"]).Scan(&exists).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	// Response
+	if !exists {
+		u.ShowResponse("Failure", 409, "Number do not exists, please register first", w)
+		return
+	}
+	ok, sid := sendOtp("+91"+mp["phoneNumber"].(string), w)
+	if ok {
+		u.ShowResponse("Success", 200, sid, w)
+	}
+
+}
+
+// function to send OTP while user registration
+func sendOtp(to string, w http.ResponseWriter) (bool, *string) {
+	params := &openapi.CreateVerificationParams{}
+	params.SetTo(to)
+
+	params.SetChannel("sms")
+
+	resp, err := twilioClient.VerifyV2.CreateVerification(os.Getenv("VERIFY_SERVICE_SID"), params)
+	if err != nil {
+		u.ShowResponse("Failure", 401, "No credentials provided", w)
+		return false, nil
+	} else {
+		return true, resp.Sid
+	}
+
+}
+
+// Check OTP status
+func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	u.EnableCors(&w)
+
+	var mp = make(map[string]interface{})
+	json.NewDecoder(r.Body).Decode(&mp)
+
+	if CheckOtp("+91"+mp["phoneNumber"].(string), mp["otp"].(string), w) {
+
+		var userDetails models.Credential
+		db.DB.Where("phone_number=?", mp["phoneNumber"]).First(&userDetails)
+		userDetails.IsLoggedIn = true
+		tokenString := u.CreateToken(userDetails)
+		db.DB.Where("user_id=?", userDetails.User_ID).Updates(userDetails)
+		u.ShowResponse("Success", 200, tokenString, w)
+
+		return
+	} else {
+		// fmt.Println("Verifictaion failed")
+		u.ShowResponse("Not Found", 404, "OTP ERROR", w)
+		return
+	}
+}
+
+// OTP code verification
+func CheckOtp(to string, code string, w http.ResponseWriter) bool {
+	params := &openapi.CreateVerificationCheckParams{}
+	params.SetTo(to)
+	params.SetCode(code)
+	resp, err := twilioClient.VerifyV2.CreateVerificationCheck(os.Getenv("VERIFY_SERVICE_SID"), params)
+
+	if err != nil {
+		return false
+	} else if *resp.Status == "approved" {
+		return true
+	} else {
+		return false
+	}
+}
+
+// @Description Registers a admin
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param UserDetails body models.Credential true "Registers a user"
+// @Param UserDetails body models.Credential true "Registers a admin"
 // @Tags Authentication
 // @Router /adminRegister [post]
 func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	u.EnableCors(&w)
-	var credential models.Credential
-	err := json.NewDecoder(r.Body).Decode(&credential)
+
+	var Credential models.Credential
+	err := json.NewDecoder(r.Body).Decode(&Credential)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+	Credential.Role = "admin"
 
-	validationErr := u.CheckValidation(credential)
-	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr, w)
-		return
-	}
-
-	if err, ok := u.IsvalidatePass(credential.Password); !ok {
-		u.ShowResponse("Failure", 401, err, w)
-		return
-	}
-
-	credential.Role = "admin"
-	err = db.DB.Where("username=?", credential.Username).First(&models.Credential{}).Error
+	var existRecord models.Credential
+	err = db.DB.Where("phone_number=?", Credential.PhoneNumber).First(&existRecord).Error
 	if err == nil {
-		u.ShowResponse("Failure", 400, "User already exists..", w)
+		u.ShowResponse("Failure", 400, "User already register please login to contnue", w)
 		return
 	}
-	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	//credential.Password = string(hashPass)
-	err = db.DB.Create(&credential).Error
+	err = db.DB.Create(&Credential).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+
+		u.ShowResponse("Failure", 500, "Internal Server Error", w)
 		return
 	}
-	u.ShowResponse("Success", 200, credential, w)
+	u.ShowResponse("Success", 200, Credential, w)
 }
 
 // @Description Registers a user
@@ -69,234 +165,73 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /userRegister [post]
 func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
-	u.EnableCors(&w)
-	var credential models.Credential
-	err := json.NewDecoder(r.Body).Decode(&credential)
+
+	var Credential models.Credential
+	err := json.NewDecoder(r.Body).Decode(&Credential)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-
-	validationErr := u.CheckValidation(credential)
-	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr, w)
-		return
-	}
-
-	if err, ok := u.IsvalidatePass(credential.Password); !ok {
-		u.ShowResponse("Failure", 401, err, w)
-		return
-	}
-	credential.Role = "user"
-	err = db.DB.Where("username=?", credential.Username).First(&models.Credential{}).Error
-	if err == nil {
-		u.ShowResponse("Failure", 400, "User already exists..", w)
-		return
-	}
-
-	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	//credential.Password = string(hashPass)
-	err = db.DB.Create(&credential).Error
+	Credential.Role = "user"
+	err = db.DB.Create(&Credential).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 500, "Internal Server Error", w)
 		return
 	}
-
-	u.ShowResponse("Success", 200, credential, w)
+	u.ShowResponse("Success", 200, Credential, w)
 
 }
 
-// @Description Login a user
-// @Accept json
-// @Success 200 {string} Logged in successfully
-// @Param UserDetails body models.Credential true "Log in the user"
-// @Tags Authentication
-// @Router /login [post]
-func LoginHandler(w http.ResponseWriter, r *http.Request) {
-	u.EnableCors(&w)
-	var credential models.Credential
-	err := json.NewDecoder(r.Body).Decode(&credential)
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	var existCred models.Credential
-	err = db.DB.Where("email=?", credential.Email).First(&existCred).Error
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	// err = bcrypt.CompareHashAndPassword([]byte(existCred.Password), []byte(credential.Password))
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	if existCred.Password != credential.Password {
-		u.ShowResponse("Failure", http.StatusUnauthorized, "Incorrect details", w)
-		return
-	}
-	tokenString := u.CreateToken(existCred)
-
-	u.ShowResponse("Success", 200, tokenString, w)
-
-}
-
-// @Description updates the password for a user
+// @Description Logs out a user
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param email body object true "email of the user"
+// @Param token header string true "token generated for the user"
 // @Tags Authentication
-// @Router /forgotPassword [post]
-func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	u.SetHeader(w)
-
-	u.EnableCors(&w)
-	var mp = make(map[string]interface{})
-	err := json.NewDecoder(r.Body).Decode(&mp)
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	var cred models.Credential
-	err = db.DB.Where("email=?", mp["email"].(string)).First(&cred).Error
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	//check if the user is valid then only create the token
-	tokenString := u.CreateToken(cred)
-	from := "abc@example.com"
-	to := []string{
-		"prajwal1711@gmail.com",
-	}
-	url := "http://localhost:8000/resetPassword/" + tokenString
-	message := []byte("Click <a href=\"" + url + "\"></a> here to reset your password")
-
-	err = smtp.SendMail("0.0.0.0:1025", nil, from, to, message)
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	u.ShowResponse("Success", 200, "Mail sent sucessfully", w)
-
-}
-
-// @Description Resests the user password
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.Response
-// @Param token header string true "email of the user"
-// @Tags Authentication
-// @Router /resetPassword [post]
-func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
-	u.SetHeader(w)
-	u.EnableCors(&w)
+// @Router /logOut [get]
+func LogOut(w http.ResponseWriter, r *http.Request) {
 	tokenString := r.Header.Get("token")
-	if tokenString == "" {
-		u.ShowResponse("Failure", 400, "Please provide token", w)
-		return
-	}
-	claims := &models.Claims{}
 
-	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		return []byte("helloWorld"), nil
-	})
-	if err != nil || !parsedToken.Valid {
-		u.ShowResponse("Failure", http.StatusUnauthorized, "Invalid Token", w)
-		return
-	}
-
-	fmt.Println(claims.UserID)
-	var password = make(map[string]string)
-
-	var userCred models.Credential
-	err = db.DB.Where("user_id=?", claims.UserID).Find(&userCred).Error
+	//Decode the token
+	claims, err := u.DecodeToken(tokenString)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
-	err = json.NewDecoder(r.Body).Decode(&password)
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	fmt.Println("Password: ", password["password"])
-	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	// userCred.Password = string(hashPass)
-	userCred.Password = password["password"]
-	err = db.DB.Where("user_id=?", claims.UserID).Updates(userCred).Error
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	u.ShowResponse("Success", 200, "Password updated successfully", w)
+	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
+	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserID).Update("is_logged_in", false)
+	u.ShowResponse("Success", 200, "Logged out successfully", w)
 
 }
 
-// @Description updates the password for a user
+// @Description Updates the data of the user
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param user_id body object true "ID of the user whose passsword is to be changed"
+// @Param token header string true "token generated for the user"
+// @Param userDetails body models.Credential true "user updated datas"
 // @Tags Authentication
-// @Router /updatePassword [post]
-func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
-	var mp = make(map[string]interface{})
-	err := json.NewDecoder(r.Body).Decode(&mp)
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
+// @Router /updateProfile [post]
+func UpdateProfile(w http.ResponseWriter, r *http.Request) {
+
 	var creds models.Credential
-	db.DB.Where("user_id=?", mp["userId"].(string)).First(&creds)
-	if mp["role"] != "" {
-		return
-	}
+	json.NewDecoder(r.Body).Decode(&creds)
 
-	// err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(mp["existPassword"]))
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	if mp["existPassword"].(string) != creds.Password {
-		u.ShowResponse("Failure", 401, "Password not matched", w)
-		return
-	}
+	tokenString := r.Header.Get("token")
 
-	if err, ok := u.IsvalidatePass(mp["newPassword"].(string)); !ok {
-		u.ShowResponse("Failure", 401, err, w)
-		return
-	}
-	// hashPass, err := u.GenerateHashPassword(mp["newPassword"].(string))
-	// 	if err != nil {
-	// 	u.ShowResponse("Failure", 400, err, w)
-	// 	return
-	// }
-	// creds.Password = string(hashPass)
-	creds.Password = mp["newPassword"].(string)
-	err = db.DB.Where("user_id=?", mp["userId"]).Updates(&creds).Error
+	//Decode the token
+	claims, err := u.DecodeToken(tokenString)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+	if creds.Role != "" || creds.Role != claims.Role {
+		u.ShowResponse("Failure", 403, "Forbidden", w)
+		return
+	}
 
-	u.ShowResponse("Success", 200, "Password updated successfully", w)
+	db.DB.Where("u_id=?", claims.UserID).Updates(&creds)
+	u.ShowResponse("Success", 200, "User updated successfully", w)
 
 }

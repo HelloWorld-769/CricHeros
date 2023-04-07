@@ -77,9 +77,9 @@ definitions:
         type: string
       deletedAt:
         $ref: '#/definitions/gorm.DeletedAt'
-      email:
-        type: string
-      password:
+      isLoggedIn:
+        type: boolean
+      phoneNumber:
         type: string
       role:
         type: string
@@ -90,8 +90,7 @@ definitions:
       userName:
         type: string
     required:
-    - email
-    - password
+    - phoneNumber
     - userName
     type: object
   models.Match:
@@ -294,9 +293,9 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers a user
+      description: Registers a admin
       parameters:
-      - description: Registers a user
+      - description: Registers a admin
         in: body
         name: UserDetails
         required: true
@@ -476,53 +475,13 @@ paths:
             $ref: '#/definitions/models.Response'
       tags:
       - Match
-  /forgotPassword:
-    post:
+  /logOut:
+    get:
       consumes:
       - application/json
-      description: updates the password for a user
+      description: Logs out a user
       parameters:
-      - description: email of the user
-        in: body
-        name: email
-        required: true
-        schema:
-          type: object
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.Response'
-      tags:
-      - Authentication
-  /login:
-    post:
-      consumes:
-      - application/json
-      description: Login a user
-      parameters:
-      - description: Log in the user
-        in: body
-        name: UserDetails
-        required: true
-        schema:
-          $ref: '#/definitions/models.Credential'
-      responses:
-        "200":
-          description: OK
-          schema:
-            type: string
-      tags:
-      - Authentication
-  /resetPassword:
-    post:
-      consumes:
-      - application/json
-      description: Resests the user password
-      parameters:
-      - description: email of the user
+      - description: token generated for the user
         in: header
         name: token
         required: true
@@ -704,18 +663,23 @@ paths:
             $ref: '#/definitions/models.Response'
       tags:
       - Toss
-  /updatePassword:
+  /updateProfile:
     post:
       consumes:
       - application/json
-      description: updates the password for a user
+      description: Updates the data of the user
       parameters:
-      - description: ID of the user whose passsword is to be changed
+      - description: token generated for the user
+        in: header
+        name: token
+        required: true
+        type: string
+      - description: user updated datas
         in: body
-        name: user_id
+        name: userDetails
         required: true
         schema:
-          type: object
+          $ref: '#/definitions/models.Credential'
       produces:
       - application/json
       responses:
