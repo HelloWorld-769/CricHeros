@@ -5,7 +5,10 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // @Description Creates a team
@@ -25,22 +28,23 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&team)
 
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	validationErr := u.CheckValidation(team)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	team.U_ID = id
 	err = db.DB.Create(&team).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	u.ShowResponse("Success", 200, team, w)
 }
 
@@ -58,16 +62,22 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	id := r.URL.Query().Get("id")
+	if id == "" {
+		u.ShowResponse("Failure", 400, "Please provide team id", w)
+		return
+	}
 	var team models.Team
 	err = db.DB.Where("t_id=?", id).First(&team).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	for _, p := range mp["players"] {
 		var player models.Player
 		team.P_ID = p
@@ -79,7 +89,12 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 		db.DB.Create(&teamList)
 		db.DB.Create(&team)
 	}
-	db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id)
+	err = db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
 	u.ShowResponse("Success", 200, "Players added to the team", w)
 
 }
@@ -92,23 +107,33 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Team
 // @Router /showTeams [get]
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
-
+	fmt.Println("asjhdjasbd")
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	id := mp["id"]
-	if id == "" {
-		u.ShowResponse("Failure", 400, "required user id", w)
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("userId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+	id := mp["userId"]
+
 	var teams []models.Team
 	query := "SELECT DISTINCT t_id,t_name,t_captain,t_type FROM teams where u_id=?"
-	db.DB.Raw(query, id).Scan(&teams)
+	err = db.DB.Raw(query, id).Scan(&teams).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
 
 	u.ShowResponse("Success", 200, teams, w)
 
@@ -127,19 +152,28 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]string)
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	t_id := mp["teamId"]
 	u_id := mp["userId"]
 	var team models.Team
 	var player []string
 	//var players []string
 	query := "SELECT t_id,t_name,t_captain,t_type FROM teams WHERE t_id =?"
-	db.DB.Raw(query, t_id).Scan(&team)
+	err = db.DB.Raw(query, t_id).Scan(&team).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
 
 	query = "SELECT p.p_name from players as p JOIN teams as t ON p.p_id=t.p_id WHERE t.t_id=? AND t.u_id=?"
-	db.DB.Raw(query, t_id, u_id).Scan(&player)
+	err = db.DB.Raw(query, t_id, u_id).Scan(&player).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
 
 	u.ShowResponse("Success", 200, &team, w)
 	u.ShowResponse("Success", 200, &player, w)
@@ -162,10 +196,11 @@ func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, "Id not provided", w)
 		return
 	}
+
 	query := "DELETE FROM teams WHERE t_id=?;"
 	err := db.DB.Raw(query, id).Error
 	if err != nil {
-		u.ShowResponse("Success", 500, err, w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 

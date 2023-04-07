@@ -3,6 +3,7 @@ module cricHeros
 go 1.18
 
 require (
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/go-playground/validator/v10 v10.12.0
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/googollee/go-socket.io v1.7.0

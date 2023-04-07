@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gorm.io/gorm"
 )
 
@@ -45,19 +46,20 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 	var scoreCardData models.CardData
 	err := json.NewDecoder(r.Body).Decode(&scoreCardData)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	validationErr := u.CheckValidation(scoreCardData)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		u.ShowResponse("Failure", 400, validationErr, w)
 		return
 	}
+
 	var matchMapping models.MatchRecord
 	err = db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchMapping).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 	go AddBallRecordHandler(scoreCardData)
@@ -87,9 +89,10 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			batsmenRecord.SR = u.RoundFloat((float64(batsmenRecord.RunScored)/float64(batsmenRecord.BPlayed))*100, 3)
 			err = db.DB.Create(&batsmenRecord).Error
 			if err != nil {
-				u.ShowResponse("Failure", 400, err.Error(), w)
+				u.ShowResponse("Failure", 500, "Internal Server error", w)
 				return
 			}
+
 			u.ShowResponse("Success", 200, batsmenRecord, w)
 		} else {
 			//update the scorecard for that user
@@ -109,7 +112,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			existRecord.SR = u.RoundFloat(float64(existRecord.RunScored)/float64(existRecord.BPlayed), 3)
 			err = db.DB.Where("p_id=?", scoreCardData.Batsmen).Updates(&existRecord).Error
 			if err != nil {
-				u.ShowResponse("Failure", 400, err.Error(), w)
+				u.ShowResponse("Failure", 400, err, w)
 				return
 			}
 			u.ShowResponse("Success", 200, existRecord, w)
@@ -138,9 +141,10 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			err = db.DB.Create(&bowlerRecord).Error
 			if err != nil {
-				u.ShowResponse("Failure", 400, err.Error(), w)
+				u.ShowResponse("Failure", 500, "Internal Server error", w)
 				return
 			}
+
 			u.ShowResponse("Success", 200, bowlerRecord, w)
 		} else {
 			existRecord.RunGiven += scoreCardData.Runs
@@ -160,9 +164,10 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			existRecord.Eco = float64(existRecord.RunGiven) / float64(existRecord.OBowled)
 			err = db.DB.Where("p_id=?", scoreCardData.Baller).Updates(&existRecord).Error
 			if err != nil {
-				u.ShowResponse("Failure", 400, err.Error(), w)
+				u.ShowResponse("Failure", 400, err, w)
 				return
 			}
+
 			u.ShowResponse("Success", 200, existRecord, w)
 		}
 	} else {
@@ -175,7 +180,11 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Shows the score card for the current matcha
 // @Accept json
 // @Success 200 {object} models.Response
-// @Param match_id body object true "Id of the match whose scoredcard is to be viewed"
+// @Param myMap body map[string]string true "Map of key-value pairs"
+// @Schema type=object
+// @Schema required=myMap
+// @Schema description=Map of key-value pairs
+// @Schema properties=mp,type=string,additionalProperties=true
 // @Tags Scorecard
 // @Router /showScoreCard [post]
 func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {
@@ -184,21 +193,30 @@ func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]string)
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("matchId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	var matchMapping models.MatchRecord
 	err = db.DB.Where("m_id=?", mp["matchId"]).First(&matchMapping).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	var matchScoreRecord []models.ScoreCard
 	err = db.DB.Where("s_id=?", matchMapping.S_ID).Find(&matchScoreRecord).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 

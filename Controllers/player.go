@@ -6,6 +6,8 @@ import (
 	u "cricHeros/Utils"
 	"encoding/json"
 	"net/http"
+
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 // @Description Creates a new Player
@@ -22,19 +24,19 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	var player models.Player
 	err := json.NewDecoder(r.Body).Decode(&player)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the json body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	validationErr := u.CheckValidation(player)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		u.ShowResponse("Failure", 400, validationErr, w)
 		return
 	}
 
 	err = db.DB.Create(&player).Error
 	if err != nil {
-		u.ShowResponse("Failure", http.StatusInternalServerError, "Error in inserting the data", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
@@ -54,7 +56,7 @@ func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	var players []models.Player
 	err := db.DB.Find(&players).Error
 	if err != nil {
-		u.ShowResponse("Failure", http.StatusInternalServerError, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
@@ -75,10 +77,10 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]string)
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	id := mp["id"]
+	id := mp["playerId"]
 	if id == "" {
 		u.ShowResponse("Failure", 400, "Please enter player id", w)
 		return
@@ -86,21 +88,22 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.DB.Table("players").Where("p_id=?", id).Scan(&PlayerData.Player).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	err = db.DB.Table("careers").Where("p_id=?", id).Scan(&PlayerData.Career).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	err = db.DB.Table("team_lists").Where("p_id=?", id).Scan(&PlayerData.Teams).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	u.ShowResponse("Success", http.StatusOK, &PlayerData, w)
 }
 
@@ -115,7 +118,17 @@ func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("playerId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 

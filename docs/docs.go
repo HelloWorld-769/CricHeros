@@ -563,6 +563,36 @@ const docTemplate = `{
                 }
             }
         },
+        "/showMatchById": {
+            "post": {
+                "description": "Shows a particular match",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "parameters": [
+                    {
+                        "description": "Match Id",
+                        "name": "matchId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/showPlayer": {
             "get": {
                 "description": "Shows the list of all the player",
@@ -635,12 +665,15 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Id of the match whose scoredcard is to be viewed",
-                        "name": "match_id",
+                        "description": "Map of key-value pairs",
+                        "name": "myMap",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],
@@ -1094,8 +1127,14 @@ const docTemplate = `{
                 "tail_team"
             ],
             "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
                 "decision": {
                     "type": "string"
+                },
+                "deletedAt": {
+                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "head_team": {
                     "type": "string"
@@ -1110,6 +1149,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "toss_won": {
+                    "type": "string"
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

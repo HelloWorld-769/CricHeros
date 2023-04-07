@@ -28,13 +28,14 @@ func AddCareerHandler(w http.ResponseWriter, r *http.Request) {
 	var career models.Career
 	err := json.NewDecoder(r.Body).Decode(&career)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	career.P_ID = id
 	err = db.DB.Create(&career).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 500, "Internal Server error", w)
 		return
 	}
 

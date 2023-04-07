@@ -25,19 +25,21 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var credential models.Credential
 	err := json.NewDecoder(r.Body).Decode(&credential)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	validationErr := u.CheckValidation(credential)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		u.ShowResponse("Failure", 400, validationErr, w)
 		return
 	}
+
 	if err, ok := u.IsvalidatePass(credential.Password); !ok {
 		u.ShowResponse("Failure", 401, err, w)
 		return
 	}
+
 	credential.Role = "admin"
 	err = db.DB.Where("username=?", credential.Username).First(&models.Credential{}).Error
 	if err == nil {
@@ -45,17 +47,16 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// if err != nil {
-	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	//credential.Password = string(hashPass)
 	err = db.DB.Create(&credential).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-
 	u.ShowResponse("Success", 200, credential, w)
 }
 
@@ -72,15 +73,16 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var credential models.Credential
 	err := json.NewDecoder(r.Body).Decode(&credential)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	validationErr := u.CheckValidation(credential)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		u.ShowResponse("Failure", 400, validationErr, w)
 		return
 	}
+
 	if err, ok := u.IsvalidatePass(credential.Password); !ok {
 		u.ShowResponse("Failure", 401, err, w)
 		return
@@ -93,8 +95,8 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// if err != nil {
-	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	//credential.Password = string(hashPass)
@@ -119,18 +121,20 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var credential models.Credential
 	err := json.NewDecoder(r.Body).Decode(&credential)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	var existCred models.Credential
 	err = db.DB.Where("email=?", credential.Email).First(&existCred).Error
 	if err != nil {
-		u.ShowResponse("Failure", http.StatusUnauthorized, "Incorrect details", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	// err = bcrypt.CompareHashAndPassword([]byte(existCred.Password), []byte(credential.Password))
-	// if err != nil {
-	// 	u.ShowResponse("Failure", http.StatusUnauthorized, "Incorrect details", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	if existCred.Password != credential.Password {
@@ -157,16 +161,17 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	var cred models.Credential
 	err = db.DB.Where("email=?", mp["email"].(string)).First(&cred).Error
 	if err != nil {
-		u.ShowResponse("Failure", http.StatusUnauthorized, "User with this email does not exists", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	//check if the user is valid then only create the token
 	tokenString := u.CreateToken(cred)
 	from := "abc@example.com"
@@ -178,8 +183,10 @@ func ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = smtp.SendMail("0.0.0.0:1025", nil, from, to, message)
 	if err != nil {
-		panic(err)
+		u.ShowResponse("Failure", 400, err, w)
+		return
 	}
+
 	u.ShowResponse("Success", 200, "Mail sent sucessfully", w)
 
 }
@@ -215,26 +222,27 @@ func ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var userCred models.Credential
 	err = db.DB.Where("user_id=?", claims.UserID).Find(&userCred).Error
 	if err != nil {
-		http.Error(w, "User not found", http.StatusInternalServerError)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	err = json.NewDecoder(r.Body).Decode(&password)
 
+	err = json.NewDecoder(r.Body).Decode(&password)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	fmt.Println("Password: ", password["password"])
 	// hashPass, err := u.GenerateHashPassword(credential.Password)
-	// if err != nil {
-	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	// userCred.Password = string(hashPass)
 	userCred.Password = password["password"]
 	err = db.DB.Where("user_id=?", claims.UserID).Updates(userCred).Error
 	if err != nil {
-		http.Error(w, "Failed to update user password", http.StatusInternalServerError)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
@@ -253,7 +261,7 @@ func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string]interface{})
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, "Error in decoding the request body", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 	var creds models.Credential
@@ -263,8 +271,8 @@ func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// err = bcrypt.CompareHashAndPassword([]byte(creds.Password), []byte(mp["existPassword"]))
-	// if err != nil {
-	// 	u.ShowResponse("Failure", 401, "Password not matched", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	if mp["existPassword"].(string) != creds.Password {
@@ -277,17 +285,18 @@ func UpdatePasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// hashPass, err := u.GenerateHashPassword(mp["newPassword"].(string))
-	// if err != nil {
-	// 	u.ShowResponse("Failure", 400, "Unable to hash the password", w)
+	// 	if err != nil {
+	// 	u.ShowResponse("Failure", 400, err, w)
 	// 	return
 	// }
 	// creds.Password = string(hashPass)
 	creds.Password = mp["newPassword"].(string)
 	err = db.DB.Where("user_id=?", mp["userId"]).Updates(&creds).Error
 	if err != nil {
-		u.ShowResponse("Failure", 500, "Error in updating the credentials", w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	u.ShowResponse("Success", 200, "Password updated successfully", w)
 
 }

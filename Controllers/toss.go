@@ -32,7 +32,7 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&toss)
 
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
@@ -45,7 +45,12 @@ func TossResultHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	res := team_id + " Won the toss"
 	toss.TossWon = res
-	db.DB.Create(toss)
+	err = db.DB.Create(toss).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
 	u.ShowResponse("Success", 200, toss, w)
 }
 
@@ -62,13 +67,15 @@ func DecisionUpdateHandler(w http.ResponseWriter, r *http.Request) {
 	var tossDecision models.Toss
 	err := json.NewDecoder(r.Body).Decode(&tossDecision)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	err = db.DB.Where("toss_id=?", tossDecision.Toss_ID).Updates(&tossDecision).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	u.ShowResponse("Success", 200, tossDecision, w)
 }

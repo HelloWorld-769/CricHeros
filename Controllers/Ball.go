@@ -65,14 +65,15 @@ func UpdateBallRecord(w http.ResponseWriter, r *http.Request) {
 	var ballRecord models.Balls
 	err := json.NewDecoder(r.Body).Decode(&ballRecord)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	err = db.DB.Where("b_id=?", ball_id).Updates(&ballRecord).Error
 	if err != nil {
-		u.ShowResponse("Failure", http.StatusInternalServerError, err.Error(), w)
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
 	u.ShowResponse("Success", http.StatusOK, ballRecord, w)
 }

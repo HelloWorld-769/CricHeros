@@ -160,16 +160,22 @@ type Claims struct {
 }
 
 type Inning struct {
-	M_ID   string
-	T_ID   string
-	TScore int64
+	M_ID      string
+	T_ID      string
+	TScore    int64
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
 type Toss struct {
-	Toss_ID  string `json:"toss_id" gorm:"default:uuid_generate_v4()"`
-	M_ID     string `json:"match_id" validate:"required"`
-	T1_ID    string `json:"head_team"  validate:"required"`
-	T2_ID    string `json:"tail_team"  validate:"required"`
-	Decision string `json:"decision"`
-	TossWon  string `json:"toss_won"`
+	Toss_ID   string `json:"toss_id" gorm:"default:uuid_generate_v4()"`
+	M_ID      string `json:"match_id" validate:"required"`
+	T1_ID     string `json:"head_team"  validate:"required"`
+	T2_ID     string `json:"tail_team"  validate:"required"`
+	Decision  string `json:"decision"`
+	TossWon   string `json:"toss_won"`
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt gorm.DeletedAt `gorm:"index"`
 }

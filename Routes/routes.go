@@ -67,6 +67,8 @@ func Routes() {
 	//Ball Handler
 	mux.Handle("/ballUpdate", c.AdminMiddlerware(http.HandlerFunc(c.UpdateBallRecord))).Methods("POST")
 
+	mux.HandleFunc("/showMatchById", c.ShowMatchById).Methods("POST")
+
 	//Socket Server
 	mux.Handle("/socket.io/", socketServer)
 

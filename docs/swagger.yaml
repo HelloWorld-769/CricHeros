@@ -189,8 +189,12 @@ definitions:
     type: object
   models.Toss:
     properties:
+      createdAt:
+        type: string
       decision:
         type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
       head_team:
         type: string
       match_id:
@@ -200,6 +204,8 @@ definitions:
       toss_id:
         type: string
       toss_won:
+        type: string
+      updatedAt:
         type: string
     required:
     - head_team
@@ -563,6 +569,25 @@ paths:
             $ref: '#/definitions/models.Response'
       tags:
       - Match
+  /showMatchById:
+    post:
+      consumes:
+      - application/json
+      description: Shows a particular match
+      parameters:
+      - description: Match Id
+        in: body
+        name: matchId
+        required: true
+        schema:
+          type: object
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Match
   /showPlayer:
     get:
       consumes:
@@ -608,11 +633,13 @@ paths:
       - application/json
       description: Shows the score card for the current matcha
       parameters:
-      - description: Id of the match whose scoredcard is to be viewed
+      - description: Map of key-value pairs
         in: body
-        name: match_id
+        name: myMap
         required: true
         schema:
+          additionalProperties:
+            type: string
           type: object
       responses:
         "200":
