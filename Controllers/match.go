@@ -23,7 +23,8 @@ import (
 func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
-	claims := r.Context().Value("claims").(*models.Claims)
+	userId := r.Context().Value("userId")
+	fmt.Println("Claims is:", userId)
 	var match models.Match
 	var count int64
 
@@ -40,7 +41,7 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, "Common record found Please Edit your teams", w)
 		return
 	}
-	match.U_ID = claims.UserID
+	match.U_ID = userId.(string)
 	now := time.Now()
 	match.Date = now.Format("02 Jan 2006")
 	err = db.DB.Create(&match).Error
@@ -85,21 +86,24 @@ func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Match
 // @Router /endMatch [post]
 func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("dsfbjsabdjfbjd")
 	u.EnableCors(&w)
 	u.SetHeader(w)
-	claims := r.Context().Value("claims").(*models.Claims)
 	var mp = make(map[string]interface{})
 	var matchData models.Match
 	var scorecard models.MatchRecord
 	var records []models.ScoreCard
 	var teamsRuns []models.Inning
+	var exists bool
+	userId := r.Context().Value("userId")
 
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure1", 400, err, w)
 		return
 	}
 
+	//validaton check
 	err = validation.Validate(mp,
 		validation.Map(
 			validation.Key("teamId", validation.Required),
@@ -110,24 +114,31 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+
+	//Check if the match exists or not
+	query := "SELECT EXISTS(SELECT * FROM matches where m_id=?)"
+	db.DB.Raw(query, mp["matchId"].(string)).Scan(&exists)
+	if !exists {
+		u.ShowResponse("Failure", 400, "Match do not exists", w)
+		return
+	}
 	EndInningHandler2(mp, w)
 
 	//get match data to update its status to completed
-
-	err = db.DB.Where("s_id", mp["matchId"].(string)).Find(&matchData).Error
+	err = db.DB.Where("m_id", mp["matchId"].(string)).First(&matchData).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
-	err = validation.Validate(mp, validation.Map(validation.Key("matchId", validation.Required)))
-	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
-		return
-	}
-
-	if claims.UserID != matchData.U_ID {
+	//check if the match is ended by that user only who created it
+	if matchData.U_ID != userId {
 		u.ShowResponse("Failure", 400, "This user did not created the match", w)
+		return
+	}
+	//check if the match is already completed or not
+	if matchData.Status == "Completed" {
+		u.ShowResponse("Failure", 400, "Match has already been completed", w)
 		return
 	}
 
@@ -153,13 +164,15 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		var pCareer models.Career
 		err = db.DB.Where("p_id=?", record.P_ID).First(&pCareer).Error
 		if err != nil {
-			u.ShowResponse("Failure", 400, err, w)
+			u.ShowResponse("Failure", 400, err.Error(), w)
 			return
 		}
 
 		pCareer.MPlayed += 1
 		if record.PType == "batsmen" {
 			pCareer.RunScored += record.RunScored
+			pCareer.Fours += record.Fours
+			pCareer.Sixes += record.Sixes
 			pCareer.HScored = int64(math.Max(float64(pCareer.HScored), float64(record.RunScored)))
 			pCareer.BallsFaced += record.BPlayed
 			if record.RunScored >= 50 && record.RunScored < 100 {
@@ -235,4 +248,33 @@ func ShowMatchById(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u.ShowResponse("Success", 200, match, w)
+}
+
+// @Description Deletes the match
+// @Accept json
+// @Produces json
+// @Success 200 {object} models.Response
+// @Param matchId body object true "Match Id"
+// @Tags Match
+// @Router /deleteMatch [delete]
+func DeleteMatchHandler(w http.ResponseWriter, r *http.Request) {
+	var mp = make(map[string]string)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, "Unable to decode the json objec", w)
+		return
+	}
+
+	err = db.DB.Where("m_id=?", mp["matchId"]).Delete(&models.Match{}).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	err = db.DB.Where("m_id=?", mp["matchId"]).Delete(&models.MatchRecord{}).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	u.ShowResponse("Success", 200, "Match deleted successfully", w)
 }

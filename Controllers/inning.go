@@ -89,5 +89,13 @@ func EndInningHandler2(mp map[string]interface{}, w http.ResponseWriter) {
 		return
 	}
 
-	u.ShowResponse("Success", http.StatusOK, inning, w)
+	//Ask from sir
+
+	var ball models.Balls
+	ball.Over = 0
+	ball.BallCount = 0
+
+	db.DB.Create(&ball)
+
+	//u.ShowResponse("Success", http.StatusOK, inning, w)
 }

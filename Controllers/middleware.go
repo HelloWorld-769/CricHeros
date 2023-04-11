@@ -24,10 +24,10 @@ func AdminMiddlerware(originalHandler http.Handler) http.Handler {
 			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
 		if err != nil || !parsedToken.Valid {
-			http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+			u.ShowResponse("Failure", 401, "Invalid Token", w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "claims", &claims)
+		ctx := context.WithValue(r.Context(), "userId", claims.UserID)
 		if claims.Role == "admin" {
 			originalHandler.ServeHTTP(w, r.WithContext(ctx))
 		} else {
@@ -40,7 +40,7 @@ func LoginMiddlerware(originalHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("token")
 		claims := &models.Claims{}
-
+		var exists bool
 		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("error")
@@ -48,7 +48,7 @@ func LoginMiddlerware(originalHandler http.Handler) http.Handler {
 			return []byte(os.Getenv("SECRET_KEY")), nil
 		})
 		if err != nil || !parsedToken.Valid {
-			http.Error(w, "Invalid or expired token", http.StatusBadRequest)
+			u.ShowResponse("Failure", 401, "Invalid Token", w)
 			return
 		}
 		var cred models.Credential
@@ -57,11 +57,15 @@ func LoginMiddlerware(originalHandler http.Handler) http.Handler {
 			u.ShowResponse("Failure", 400, err, w)
 			return
 		}
-		if cred.IsLoggedIn {
+
+		query := "SELECT EXISTS(SELECT * FROM blacklists where token=?)"
+		db.DB.Raw(query, tokenString).Scan(&exists)
+		if !exists {
 			originalHandler.ServeHTTP(w, r)
 		} else {
-			u.ShowResponse("Failure", 400, "Please login to continue", w)
+			u.ShowResponse("Failure", 400, "Token is blacklisted", w)
 			return
 		}
+
 	})
 }

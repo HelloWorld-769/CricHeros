@@ -5,6 +5,7 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
+	"fmt"
 
 	"github.com/twilio/twilio-go"
 
@@ -57,8 +58,9 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ok, sid := sendOtp("+91"+mp["phoneNumber"].(string), w)
+	fmt.Println("SID is", sid)
 	if ok {
-		u.ShowResponse("Success", 200, sid, w)
+		u.ShowResponse("Success", 200, "OTP sent sucessfully", w)
 	}
 
 }
@@ -92,16 +94,17 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 		var userDetails models.Credential
 		db.DB.Where("phone_number=?", mp["phoneNumber"]).First(&userDetails)
+
 		userDetails.IsLoggedIn = true
 		tokenString := u.CreateToken(userDetails)
-		db.DB.Where("user_id=?", userDetails.User_ID).Updates(userDetails)
 		userDetails.Token = tokenString
+		db.DB.Where("user_id=?", userDetails.User_ID).Updates(userDetails)
 		u.ShowResponse("Success", 200, tokenString, w)
 
 		return
 	} else {
 		// fmt.Println("Verifictaion failed")
-		u.ShowResponse("Not Found", 404, "OTP ERROR", w)
+		u.ShowResponse("Failure", 401, "Verifictaion Failed", w)
 		return
 	}
 }
@@ -192,16 +195,18 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Router /logOut [get]
 func LogOut(w http.ResponseWriter, r *http.Request) {
 	tokenString := r.Header.Get("token")
-
+	var blackList models.Blacklist
 	//Decode the token
 	claims, err := u.DecodeToken(tokenString)
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
-	//claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now())
 	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserID).Update("is_logged_in", false)
+
+	blackList.Token = tokenString
+	db.DB.Create(blackList)
 	u.ShowResponse("Success", 200, "Logged out successfully", w)
 
 }

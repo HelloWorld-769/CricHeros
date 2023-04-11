@@ -41,7 +41,8 @@ func SetHeader(w http.ResponseWriter) {
 
 func CreateToken(tokenPayload models.Credential) string {
 
-	expirationTime := time.Now().Add(10 * time.Minute)
+	expirationTime := time.Now().Add(10 * time.Hour)
+	fmt.Println("Exipiration time is :", expirationTime)
 	claims := models.Claims{
 		UserID: tokenPayload.User_ID,
 		Role:   tokenPayload.Role,

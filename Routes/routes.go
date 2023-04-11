@@ -54,6 +54,7 @@ func Routes() {
 	mux.Handle("/showMatch", c.LoginMiddlerware(http.HandlerFunc(c.ShowMatchHandler))).Methods("GET")
 	mux.Handle("/endMatch", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.EndMatchHandler)))).Methods("POST")
 	mux.Handle("/showMatchById", c.LoginMiddlerware(http.HandlerFunc(c.ShowMatchById))).Methods("POST")
+	mux.Handle("/deleteMatch", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.DeleteMatchHandler)))).Methods("DELETE")
 
 	//score card routes
 	mux.Handle("/addToScoreCard", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.ScorecardRecordHandler)))).Methods("POST")

@@ -23,7 +23,7 @@ func Connect() error {
 	query := `CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`
 	db.Exec(query)
 	DB = db
-	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credential{}, &models.Balls{}, &models.ScoreCard{}, &models.MatchRecord{}, &models.TeamList{}, &models.Inning{}, &models.Toss{})
+	err = db.AutoMigrate(&models.Player{}, &models.Career{}, &models.Match{}, &models.Team{}, &models.Credential{}, &models.Balls{}, &models.ScoreCard{}, &models.MatchRecord{}, &models.TeamList{}, &models.Inning{}, &models.Toss{}, &models.Blacklist{})
 	if err != nil {
 		return errors.New("error in creating the tables")
 	}

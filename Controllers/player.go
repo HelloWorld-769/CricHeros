@@ -21,7 +21,9 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 
+	var exists bool
 	var player models.Player
+	var playerCareer models.Career
 	err := json.NewDecoder(r.Body).Decode(&player)
 
 	if err != nil {
@@ -35,9 +37,22 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	query := "SELECT EXISTS(SELECT * FROM players WHERE phone_no=?)"
+	db.DB.Raw(query, player.PhoneNo).Scan(&exists)
+	if exists {
+		u.ShowResponse("Failure", 400, "Player already exists", w)
+		return
+	}
 	err = db.DB.Create(&player).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+
+	playerCareer.P_ID = player.P_ID
+	err = db.DB.Create(&playerCareer).Error
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
@@ -135,7 +150,7 @@ func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.DB.Where("p_id=?", mp["playerId"].(string)).Delete(&models.Player{}).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 

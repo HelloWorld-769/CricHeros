@@ -5,10 +5,7 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"errors"
 	"net/http"
-
-	"gorm.io/gorm"
 )
 
 func AddBallRecordHandler(scoreCardData models.CardData) {
@@ -19,11 +16,24 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 	ball.Runs = scoreCardData.Runs
 	ball.P_ID = scoreCardData.Baller
 
-	var lastBallRecord models.Balls
-	err := db.DB.Select("over", "ball_count").Last(&lastBallRecord).Error
-	//fmt.Println("lastBallRecord is ", lastBallRecord)
-	if errors.Is(err, gorm.ErrRecordNotFound) {
+	/*
+		//optional
+		var matchInning []models.Balls
+		db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchInning)
 
+		if matchInning == nil {
+			ball.Inning = "Inning 1"
+		}
+		if matchInning[0].Inning == "Inning 1" {
+			ball.Inning = "Inning 2"
+		}
+
+	*/
+	var lastBallRecord models.Balls
+	query := "SELECT overs FROM balls ORDER BY created_at DESC LIMIT 1"
+	db.DB.Raw(query).Scan(&lastBallRecord)
+	//fmt.Println("lastBallRecord is ", lastBallRecord)
+	if lastBallRecord.Over == 0 {
 		ball.BallCount = 1
 		ball.Over = 1
 		if scoreCardData.Ball_Type == "normal" || scoreCardData.Ball_Type == "wicket" {

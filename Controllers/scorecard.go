@@ -40,8 +40,9 @@ func getMaidenOvers(player_id string) int64 {
 // @Tags Scorecard
 // @Router /addToScoreCard [post]
 func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
-	u.SetHeader(w)
+
 	u.EnableCors(&w)
+	u.SetHeader(w)
 	//var mp = make(map[string]interface{})
 	var scoreCardData models.CardData
 	var matchMapping models.MatchRecord
@@ -59,10 +60,10 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchMapping).Error
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
-	go AddBallRecordHandler(scoreCardData)
+	AddBallRecordHandler(scoreCardData)
 	// creating or updating reocrd for bowler
 	if scoreCardData.Batsmen != "" {
 		var existRecord models.ScoreCard
@@ -96,6 +97,10 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 			u.ShowResponse("Success", 200, batsmenRecord, w)
 		} else {
 			//update the scorecard for that user
+			if existRecord.IsOut == "Out" {
+				u.ShowResponse("Failure", 400, "Player is already out choose another player", w)
+				return
+			}
 			existRecord.RunScored = existRecord.RunScored - scoreCardData.PrevRuns + scoreCardData.Runs
 			if scoreCardData.Runs == 4 {
 				existRecord.Fours += 1
@@ -167,7 +172,6 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 				u.ShowResponse("Failure", 400, err, w)
 				return
 			}
-
 			u.ShowResponse("Success", 200, existRecord, w)
 		}
 	} else {

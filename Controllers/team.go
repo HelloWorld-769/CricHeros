@@ -5,7 +5,6 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -66,25 +65,34 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
+	teamID := mp["teamId"][0]
+	if teamID == "" {
 		u.ShowResponse("Failure", 400, "Please provide team id", w)
 		return
 	}
 
-	err = db.DB.Where("t_id=?", id).First(&team).Error
+	err = db.DB.Where("t_id=?", teamID).First(&team).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
 	for _, p := range mp["players"] {
+
+		var exists bool
+		query := "SELECT EXISTS(SELECT * FROM teams where p_id=?)"
+
+		db.DB.Raw(query, p).Scan(&exists)
+		if exists {
+			u.ShowResponse("Failure", 400, "Player already present in that team", w)
+			return
+		}
 		var player models.Player
 		team.P_ID = p
-		db.DB.Where("p_id=?", id).Updates(&player)
+		db.DB.Where("p_id=?", teamID).Updates(&player)
 		teamList := models.TeamList{
 			P_ID: p,
-			T_ID: id,
+			T_ID: teamID,
 		}
 		err := db.DB.Create(&teamList).Error
 		if err != nil {
@@ -97,7 +105,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	err = db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", id).Error
+	err = db.DB.Exec("DELETE FROM teams WHERE p_id='' and t_id=?", teamID).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
@@ -115,7 +123,6 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Team
 // @Router /showTeams [get]
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("asjhdjasbd")
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	var mp = make(map[string]string)
