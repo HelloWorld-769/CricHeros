@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/o1egl/paseto"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -45,6 +47,14 @@ func EnableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
+func CheckValidation(data interface{}) error {
+	validationErr := Validate.Struct(data)
+	if validationErr != nil {
+		return validationErr
+	}
+	return nil
+}
+
 func CreateToken(tokenPayload models.Credential) string {
 
 	expirationTime := time.Now().Add(3 * time.Minute)
@@ -66,24 +76,7 @@ func CreateToken(tokenPayload models.Credential) string {
 	return tokenString
 }
 
-func CheckValidation(data interface{}) error {
-	validationErr := Validate.Struct(data)
-	if validationErr != nil {
-		return validationErr
-	}
-	return nil
-}
-
-func CheckMapValidation(data interface{}) error {
-	fmt.Println("dadtaaskh: ", data)
-	validationErr := Validate.Var(data, "required")
-	if validationErr != nil {
-		return validationErr
-	}
-	return nil
-}
-
-func DecodeToken(tokenString string, w http.ResponseWriter) (models.Claims, error) {
+func DecodeToken(tokenString string, w http.ResponseWriter) (*models.Claims, error) {
 	claims := &models.Claims{}
 	fmt.Println("decode token called")
 	parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
@@ -94,9 +87,10 @@ func DecodeToken(tokenString string, w http.ResponseWriter) (models.Claims, erro
 	})
 
 	if err != nil || !parsedToken.Valid {
-		return *claims, fmt.Errorf("invalid or expired token")
+		return nil, fmt.Errorf("invalid or expired token")
 	}
 
+	//creating a new token when the token expiry time is only 2 min left
 	if claims.ExpiresAt.Before(time.Now().Add(2 * time.Minute)) {
 		fmt.Println("refresh handler called")
 		//generate new token and update to user table
@@ -111,6 +105,7 @@ func DecodeToken(tokenString string, w http.ResponseWriter) (models.Claims, erro
 		newTokenString, err := newToken.SignedString([]byte(os.Getenv("SECRET_KEY")))
 		if err != nil {
 			fmt.Println("error is :", err)
+			return nil, err
 		}
 		db.DB.Where("user_id=?", claims.UserId).Update("token", newTokenString)
 		cookie := http.Cookie{
@@ -121,44 +116,56 @@ func DecodeToken(tokenString string, w http.ResponseWriter) (models.Claims, erro
 		}
 		http.SetCookie(w, &cookie)
 	}
-	return *claims, nil
+	return claims, nil
 }
 
-// func GenrateTokenPair(tokenPayload models.Credential) (map[string]string, error) {
-// 	// expirationTime := time.Now().Add(10 * time.Hour)
-// 	//creating access token
-// 	atPayload := models.AcessToken{
-// 		UserId: tokenPayload.User_ID,
-// 		Role:   tokenPayload.Role,
-// 		RegisteredClaims: jwt.RegisteredClaims{
-// 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
-// 		},
-// 	}
-// 	aToken := jwt.NewWithClaims(jwt.SigningMethodHS256, atPayload)
-// 	aTokenString, err := aToken.SignedString([]byte(os.Getenv("SECRET_KEY")))
-// 	if err != nil {
-// 		fmt.Println("error is :", err)
-// 		return nil, err
-// 	}
+func CreatePasetoToken(tokenPayload models.Credential) (string, error) {
 
-// 	//creating refresh token
-// 	rtPayload := models.RefreshToken{
-// 		UserId: tokenPayload.User_ID,
-// 		RegisteredClaims: jwt.RegisteredClaims{
-// 			ExpiresAt: jwt.NewNumericDate(
-// 				time.Now().Add(15 * time.Hour)),
-// 		},
-// 	}
+	payload := &models.Payload{
+		UserId:    tokenPayload.User_ID,
+		Role:      tokenPayload.Role,
+		IssuedAt:  time.Now(),
+		ExpiredAt: time.Now().Add(time.Minute * 5),
+	}
 
-// 	rToken := jwt.NewWithClaims(jwt.SigningMethodHS256, rtPayload)
-// 	rTokenString, err := rToken.SignedString([]byte(os.Getenv("SECRET_KEY")))
-// 	if err != nil {
-// 		fmt.Println("error is :", err)
-// 		return nil, err
-// 	}
+	tokenString, err := paseto.NewV2().Encrypt([]byte(os.Getenv("PASETO_KEY")), payload, nil)
+	if err != nil {
+		return "", nil
+	}
 
-// 	return map[string]string{
-// 		"accessToken":  aTokenString,
-// 		"refreshToken": rTokenString,
-// 	}, nil
-// }
+	return tokenString, nil
+
+}
+
+func DecodePasetoToken(token string, w http.ResponseWriter) (*models.Payload, error) {
+	payload := &models.Payload{}
+	err := paseto.NewV2().Decrypt(token, []byte(os.Getenv("PASETO_KEY")), payload, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if payload.ExpiredAt.Before(time.Now().Add(2 * time.Minute)) {
+		//create a new paseto token for them
+		newPayload := &models.Payload{
+			UserId:    payload.UserId,
+			Role:      payload.Role,
+			IssuedAt:  time.Now(),
+			ExpiredAt: time.Now().Add(time.Minute * 5),
+		}
+
+		newTokenString, err := paseto.NewV2().Encrypt([]byte(os.Getenv("PASETO_KEY")), newPayload, nil)
+		if err != nil {
+			return nil, err
+		}
+		db.DB.Where("user_id=?", payload.UserId).Update("token", newTokenString)
+		cookie := http.Cookie{
+			Name:     "token",
+			Value:    newTokenString,
+			HttpOnly: true,
+			Expires:  time.Now().Add(time.Minute * 4),
+		}
+		http.SetCookie(w, &cookie)
+
+	}
+	return payload, nil
+}

@@ -20,12 +20,21 @@ definitions:
       prevRuns:
         type: integer
       runs:
+        enum:
+        - 1
+        - 2
+        - 3
+        - 4
+        - 5
+        - 6
+        - 7
         type: integer
     required:
     - ballType
     - baller
     - batsmen
     - matchId
+    - runs
     type: object
   models.Career:
     properties:
@@ -40,8 +49,6 @@ definitions:
         type: number
       createdAt:
         type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
       economy:
         type: number
       fifties:
@@ -75,23 +82,23 @@ definitions:
     properties:
       createdAt:
         type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
       isLoggedIn:
         type: boolean
       phoneNumber:
         type: string
       role:
         type: string
+      token:
+        type: string
       updatedAt:
         type: string
       user_id:
         type: string
-      userName:
+      username:
         type: string
     required:
     - phoneNumber
-    - userName
+    - username
     type: object
   models.Match:
     properties:
@@ -192,8 +199,6 @@ definitions:
         type: string
       decision:
         type: string
-      deletedAt:
-        $ref: '#/definitions/gorm.DeletedAt'
       head_team:
         type: string
       match_id:
@@ -224,11 +229,6 @@ paths:
       - application/json
       description: Add player career
       parameters:
-      - description: Player ID
-        in: query
-        name: id
-        required: true
-        type: string
       - description: Adds Player career
         in: body
         name: playerCareer
@@ -260,9 +260,7 @@ paths:
         name: player
         required: true
         schema:
-          items:
-            type: string
-          type: array
+          type: string
       responses:
         "200":
           description: OK
@@ -413,6 +411,25 @@ paths:
             $ref: '#/definitions/models.Response'
       tags:
       - Toss
+  /deleteMatch:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes the match
+      parameters:
+      - description: Match Id
+        in: body
+        name: matchId
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Match
   /deleteTeamByID:
     delete:
       consumes:
@@ -420,16 +437,15 @@ paths:
       description: Delete the team
       parameters:
       - description: ID of the team
-        in: query
-        name: id
-        required: true
-        type: string
-      - description: ID of the user
         in: body
-        name: user_id
+        name: teamId
         required: true
         schema:
-          type: object
+          example: |-
+            {
+             "teamId":"string"
+            }
+          type: string
       responses:
         "200":
           description: OK
@@ -445,10 +461,15 @@ paths:
       parameters:
       - description: Id of the team to end its inning
         in: body
-        name: team_id
+        name: matchDetils
         required: true
         schema:
-          type: object
+          example: |-
+            {
+             "matchId":"string",
+             "teamId":"string"
+            }
+          type: string
       responses:
         "200":
           description: OK
@@ -462,12 +483,17 @@ paths:
       - application/json
       description: Ends the match and updates the scorecard of every player
       parameters:
-      - description: Id of the match to end
+      - description: Id of the match to end it
         in: body
-        name: match_id
+        name: matchDetils
         required: true
         schema:
-          type: object
+          example: |-
+            {
+             "matchId":"string",
+             "teamId":"string"
+            }
+          type: string
       responses:
         "200":
           description: OK
@@ -480,12 +506,6 @@ paths:
       consumes:
       - application/json
       description: Logs out a user
-      parameters:
-      - description: token generated for the user
-        in: header
-        name: token
-        required: true
-        type: string
       produces:
       - application/json
       responses:
@@ -501,12 +521,16 @@ paths:
       - application/json
       description: Shows the list of all the player
       parameters:
-      - description: Id of the player
+      - description: ID of the player
         in: body
-        name: id
+        name: playerId
         required: true
         schema:
-          type: object
+          example: |-
+            {
+            "playerId":"string"
+            }
+          type: string
       produces:
       - application/json
       responses:
@@ -516,6 +540,31 @@ paths:
             $ref: '#/definitions/models.Response'
       tags:
       - Player
+  /sendOTP:
+    post:
+      consumes:
+      - application/json
+      description: Sends a OTp to the nuber entered
+      parameters:
+      - description: Phone Number of registered user
+        in: body
+        name: phoneNumber
+        required: true
+        schema:
+          example: |-
+            {
+            "phoneNumber":"string"
+            }
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Authentication
   /showMatch:
     post:
       consumes:
@@ -534,12 +583,13 @@ paths:
       - application/json
       description: Shows a particular match
       parameters:
-      - description: Match Id
+      - description: 'Id of the match '
         in: body
-        name: matchId
+        name: matchDetails
         required: true
         schema:
-          type: object
+          example: "{\n \"matchId\":\"string\" \n}"
+          type: string
       responses:
         "200":
           description: OK
@@ -573,10 +623,14 @@ paths:
       parameters:
       - description: ID of the player
         in: body
-        name: id
+        name: playerId
         required: true
         schema:
-          type: object
+          example: |-
+            {
+            "playerId":"string"
+            }
+          type: string
       produces:
       - application/json
       responses:
@@ -592,14 +646,16 @@ paths:
       - application/json
       description: Shows the score card for the current matcha
       parameters:
-      - description: Map of key-value pairs
+      - description: Id of the match whose scorecard is to be shown
         in: body
-        name: myMap
+        name: matchId
         required: true
         schema:
-          additionalProperties:
-            type: string
-          type: object
+          example: |-
+            {
+             "matchId":"string"
+            }
+          type: string
       responses:
         "200":
           description: OK
@@ -615,9 +671,14 @@ paths:
       parameters:
       - description: ID of the team
         in: body
-        name: team_id
+        name: teamId
         required: true
         schema:
+          example: |-
+            {
+             "userId":"string",
+             "teamId":"string"
+            }
           type: string
       responses:
         "200":
@@ -633,10 +694,15 @@ paths:
       description: Shows the list of teams
       parameters:
       - description: ID of the User
-        in: query
-        name: id
+        in: body
+        name: userId
         required: true
-        type: string
+        schema:
+          example: |-
+            {
+            "userId":"string"
+            }
+          type: string
       responses:
         "200":
           description: OK
@@ -669,11 +735,6 @@ paths:
       - application/json
       description: Updates the data of the user
       parameters:
-      - description: token generated for the user
-        in: header
-        name: token
-        required: true
-        type: string
       - description: user updated datas
         in: body
         name: userDetails
@@ -701,6 +762,32 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.Credential'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      tags:
+      - Authentication
+  /verifyOTP:
+    post:
+      consumes:
+      - application/json
+      description: Verifies the OTP sent to the user
+      parameters:
+      - description: Phone Number of registered user and the otp sent to it
+        in: body
+        name: details
+        required: true
+        schema:
+          example: |-
+            {
+            "phoneNumber":"string",
+            "otp":"string"
+            }
+          type: string
       produces:
       - application/json
       responses:

@@ -12,7 +12,6 @@ import (
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param id query string true "Player ID"
 // @Param playerCareer body models.Career true "Adds Player career"
 // @Tags Player
 // @Router /addCareer [post]

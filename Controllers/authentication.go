@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"time"
 
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"github.com/twilio/twilio-go"
 
 	"net/http"
@@ -25,13 +26,14 @@ func TwilioInit(password string) {
 	})
 }
 
-// // twilio client interface
-// var client *twilio.RestClient = twilio.NewRestClientWithParams(twilio.ClientParams{
-// 	Username: u.TWILIO_ACCOUNT_SID,
-// 	Password: u.TWILIO_AUTH_TOKEN,
-// })
-
 // send OTP to user
+// @Description Sends a OTp to the nuber entered
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Param phoneNumber body string true "Phone Number of registered user" SchemaExample({\n"phoneNumber":"string"\n})
+// @Tags Authentication
+// @Router /sendOTP [post]
 func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	u.EnableCors(&w)
@@ -44,7 +46,15 @@ func SendOtpHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
-
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("phoneNumber", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 	// Check for number
 
 	err = db.DB.Raw("SELECT EXISTS(SELECT 1 FROM credentials WHERE phone_number=?)", mp["phoneNumber"]).Scan(&exists).Error
@@ -83,19 +93,40 @@ func sendOtp(to string, w http.ResponseWriter) (bool, *string) {
 
 }
 
-// Check OTP status
+// @Description Verifies the OTP sent to the user
+// @Accept json
+// @Produce json
+// @Success 200 {object} models.Response
+// @Param details body string true "Phone Number of registered user and the otp sent to it" SchemaExample({\n"phoneNumber":"string",\n"otp":"string"\n})
+// @Tags Authentication
+// @Router /verifyOTP [post]
 func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 	u.EnableCors(&w)
 
 	var mp = make(map[string]interface{})
-	json.NewDecoder(r.Body).Decode(&mp)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("phoneNumber", validation.Required),
+			validation.Key("otp", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
 	if CheckOtp("+91"+mp["phoneNumber"].(string), mp["otp"].(string), w) {
 
 		var userDetails models.Credential
 		db.DB.Where("phone_number=?", mp["phoneNumber"]).First(&userDetails)
-		expirationTime := time.Now().Add(time.Minute * 5)
+		expirationTime := time.Now().Add(time.Hour * 4)
 		fmt.Println("Cookie expiration time: ", expirationTime)
 		userDetails.IsLoggedIn = true
 		tokenString := u.CreateToken(userDetails)
@@ -103,8 +134,8 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 			Name:  "token",
 			Value: tokenString,
 			// Secure: true,
-			// HttpOnly: true,
-			Expires: expirationTime,
+			HttpOnly: true,
+			Expires:  expirationTime,
 		}
 		http.SetCookie(w, cookie)
 		userDetails.Token = tokenString
@@ -200,7 +231,6 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param token header string true "token generated for the user"
 // @Tags Authentication
 // @Router /logOut [get]
 func LogOut(w http.ResponseWriter, r *http.Request) {
@@ -212,14 +242,16 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
 	}
 	var blackList models.Blacklist
 	//Decode the token
-	claims, err := u.DecodeToken(tokenString.Value, w)
+	payload, err := u.DecodeToken(tokenString.Value, w)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
-	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserId).Update("is_logged_in", false)
+	db.DB.Model(&models.Credential{}).Where("user_id=?", payload.UserId).Update("is_logged_in", false)
+	db.DB.Model(&models.Credential{}).Where("user_id=?", payload.UserId).Update("token", nil)
 
+	//adding the token to blacklist table
 	blackList.Token = tokenString.Value
 	db.DB.Create(blackList)
 
@@ -235,7 +267,6 @@ func LogOut(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param token header string true "token generated for the user"
 // @Param userDetails body models.Credential true "user updated datas"
 // @Tags Authentication
 // @Router /updateProfile [post]
@@ -251,17 +282,17 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Decode the token
-	claims, err := u.DecodeToken(tokenString.Value, w)
+	payload, err := u.DecodeToken(tokenString.Value, w)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	if creds.Role != "" || creds.Role != claims.Role {
+	if creds.Role != "" || creds.Role != payload.Role {
 		u.ShowResponse("Failure", 403, "Forbidden", w)
 		return
 	}
 
-	db.DB.Where("u_id=?", claims.UserId).Updates(&creds)
+	db.DB.Where("u_id=?", payload.UserId).Updates(&creds)
 	u.ShowResponse("Success", 200, "User updated successfully", w)
 
 }

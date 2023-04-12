@@ -90,7 +90,7 @@ func ShowMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Ends the match and updates the scorecard of every player
 // @Accept json
 // @Success 200 {object} models.Response
-// @Param match_id body object true "Id of the match to end"
+// @Param matchDetils body string true "Id of the match to end it" SchemaExample({\n "matchId":"string",\n "teamId":"string"\n})
 // @Tags Match
 // @Router /endMatch [post]
 func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
@@ -232,7 +232,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produces json
 // @Success 200 {object} models.Response
-// @Param matchId body object true "Match Id"
+// @Param matchDetails body string true "Id of the match " SchemaExample({\n "matchId":"string" \n})
 // @Tags Match
 // @Router /showMatchById [post]
 func ShowMatchById(w http.ResponseWriter, r *http.Request) {
@@ -243,11 +243,16 @@ func ShowMatchById(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
-	matchId := mp["matchId"]
-	if matchId == "" {
-		u.ShowResponse("Failure", 400, "Plaease provide match id", w)
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("matchId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+	matchId := mp["matchId"]
 
 	err = db.DB.Where("m_id=?", matchId).First(&match).Error
 	if err != nil {
@@ -262,7 +267,7 @@ func ShowMatchById(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produces json
 // @Success 200 {object} models.Response
-// @Param matchId body object true "Match Id"
+// @Param matchId body string true "Match Id" ScehmaExample({\n"matchId":"string"\n})
 // @Tags Match
 // @Router /deleteMatch [delete]
 func DeleteMatchHandler(w http.ResponseWriter, r *http.Request) {
@@ -273,6 +278,15 @@ func DeleteMatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("matchId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
 	err = db.DB.Where("m_id=?", mp["matchId"]).Delete(&models.Match{}).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)

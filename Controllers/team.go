@@ -33,7 +33,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
 	validationErr := u.CheckValidation(team)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
 		return
 	}
 
@@ -51,7 +51,7 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Success 200 {object} models.Response
 // @Param id query string true "ID of the team"
-// @Param player body []string true "Array of players"
+// @Param player body string true "Array of players" ScehmaExample("{\n"teamId":["string"],\n"players":["string"]\n}")
 // @Tags Team
 // @Router /addPlayertoTeam [post]
 func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +60,16 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 	var mp = make(map[string][]string)
 	var team models.Team
 	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("teamId", validation.Required),
+			validation.Key("players", validation.Required),
+		),
+	)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
@@ -119,7 +129,7 @@ func AddPlayertoTeamHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produces json
 // @Success 200 {object} models.Response
-// @Param id query string true "ID of the User"
+// @Param userId body string true "ID of the User" SchemaExample({\n"userId":"string"\n})
 // @Tags Team
 // @Router /showTeams [get]
 func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
@@ -158,7 +168,7 @@ func ShowTeamsHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produces json
 // @Success 200 {object} models.Response
-// @Param  team_id body string  true "ID of the team".
+// @Param  teamId body string  true "ID of the team" SchemaExample({\n "userId":"string",\n "teamId":"string"\n})
 // @Tags Team
 // @Router /showTeamByID [post]
 func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -172,13 +182,23 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("teamId", validation.Required),
+			validation.Key("userId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
 
 	t_id := mp["teamId"]
 	u_id := mp["userId"]
 
 	//var players []string
-	query := "SELECT t_id,t_name,t_captain,t_type FROM teams WHERE t_id =?"
-	err = db.DB.Raw(query, t_id).Scan(&team).Error
+	query := "SELECT t_id,t_name,t_captain,t_type FROM teams WHERE t_id =? AND u_id=?"
+	err = db.DB.Raw(query, t_id, u_id).Scan(&team).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
@@ -200,21 +220,32 @@ func ShowTeamByIDHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produces json
 // @Success 200 {object} models.Response
-// @Param id query string true "ID of the team".
-// @Param user_id body object true "ID of the user"
+// @Param  teamId body string  true "ID of the team" SchemaExample({\n "teamId":"string"\n})
 // @Tags Team
 // @Router /deleteTeamByID [delete]
 func DeleteTeamHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	u.EnableCors(&w)
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		u.ShowResponse("Failure", 400, "Id not provided", w)
+	var mp = make(map[string]string)
+	err := json.NewDecoder(r.Body).Decode(&mp)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
+	err = validation.Validate(mp,
+		validation.Map(
+			validation.Key("teamId", validation.Required),
+		),
+	)
+	if err != nil {
+		u.ShowResponse("Failure", 400, err.Error(), w)
+		return
+	}
+	teamId := mp["teamId"]
+
 	query := "DELETE FROM teams WHERE t_id=?;"
-	err := db.DB.Raw(query, id).Error
+	err = db.DB.Raw(query, teamId).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return

@@ -54,7 +54,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 
 	validationErr := u.CheckValidation(scoreCardData)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr, w)
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
 		return
 	}
 
@@ -184,11 +184,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 // @Description Shows the score card for the current matcha
 // @Accept json
 // @Success 200 {object} models.Response
-// @Param myMap body map[string]string true "Map of key-value pairs"
-// @Schema type=object
-// @Schema required=myMap
-// @Schema description=Map of key-value pairs
-// @Schema properties=mp,type=string,additionalProperties=true
+// @Param matchId body string true "Id of the match whose scorecard is to be shown" SchemaExample({\n "matchId":"string"\n})
 // @Tags Scorecard
 // @Router /showScoreCard [post]
 func ShowScoreCardHandler(w http.ResponseWriter, r *http.Request) {

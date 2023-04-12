@@ -12,7 +12,7 @@ import (
 
 // @Description Ends the current team innings
 // @Accept json
-// @Param team_id body object true "Id of the team to end its inning"
+// @Param matchDetils body string true "Id of the team to end its inning" SchemaExample({\n "matchId":"string",\n "teamId":"string"\n})
 // @Tags Inning
 // @Success 200 {object} models.Response
 // @Router /endInning [post]

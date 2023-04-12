@@ -27,13 +27,13 @@ func AddPlayerHandler(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&player)
 
 	if err != nil {
-		u.ShowResponse("Failure", 400, err, w)
+		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
 	validationErr := u.CheckValidation(player)
 	if validationErr != nil {
-		u.ShowResponse("Failure", 400, validationErr, w)
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
 		return
 	}
 
@@ -83,7 +83,7 @@ func ShowPlayerHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param id body object true "ID of the player"
+// @Param playerId body string true "ID of the player" SchemaExample({\n"playerId":"string"\n})
 // @Tags Player
 // @Router /showPlayerID [get]
 func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +127,7 @@ func ShowPlayerByIDHandler(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} models.Response
-// @Param id body object true "Id of the player"
+// @Param playerId body string true "ID of the player" SchemaExample({\n"playerId":"string"\n})
 // @Tags Player
 // @Router /retirePlayer [delete]
 func DeletePlayerHandler(w http.ResponseWriter, r *http.Request) {

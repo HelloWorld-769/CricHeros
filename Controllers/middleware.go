@@ -15,13 +15,13 @@ func AdminMiddlerware(originalHandler http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := u.DecodeToken(tokenString.Value, w)
+		payload, err := u.DecodeToken(tokenString.Value, w)
 		if err != nil {
-			u.ShowResponse("Failure", 401, err, w)
+			u.ShowResponse("Failure", 401, err.Error(), w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "userId", claims.UserId)
-		if claims.Role == "admin" {
+		ctx := context.WithValue(r.Context(), "userId", payload.UserId)
+		if payload.Role == "admin" {
 			originalHandler.ServeHTTP(w, r.WithContext(ctx))
 		} else {
 			u.ShowResponse("Failed", http.StatusForbidden, "Access denied", w)

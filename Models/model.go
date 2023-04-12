@@ -7,16 +7,30 @@ import (
 	"gorm.io/gorm"
 )
 
+// User represents the user for this application
+//
+// A user is the security principal for this application.
+// It's also used as one of main axes for reporting.
+//
+// A user can have friends with whom they can share what they like.
+//
+// swagger:model
 type Response struct {
-	Status string      `json:"status"`
-	Code   int64       `json:"code"`
-	Data   interface{} `json:"data"`
+	Status string `json:"status"`
+
+	Code int64       `json:"code"`
+	Data interface{} `json:"data"`
 }
+
 type PlayerData struct {
-	Player    Player
-	Career    Career
-	Teams     TeamList
+	Player Player
+
+	Career Career
+
+	Teams TeamList
+
 	CreatedAt time.Time
+
 	UpdatedAt time.Time
 }
 type Player struct {
@@ -25,7 +39,7 @@ type Player struct {
 
 	P_Age     int64  `json:"playerAge" validate:"required,gt=18"`
 	JerseyNo  int64  `json:"jerseyNo" validate:"required"`
-	PhoneNo   string `json:"phoneNo" validate:"required" gorm:"unique"`
+	PhoneNo   string `json:"phoneNo" validate:"required,len=10" gorm:"unique"`
 	Country   string `json:"country" validate:"required"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -151,6 +165,13 @@ type Claims struct {
 	UserId string
 	Role   string
 	jwt.RegisteredClaims
+}
+
+type Payload struct {
+	UserId    string    `json:"userId"`
+	Role      string    `json:"role"`
+	IssuedAt  time.Time `json:"issuedAt"`
+	ExpiredAt time.Time `json:"expiredAt"`
 }
 type Inning struct {
 	M_ID      string

@@ -30,13 +30,6 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "Player ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
                         "description": "Adds Player career",
                         "name": "playerCareer",
                         "in": "body",
@@ -79,10 +72,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
+                            "type": "string"
                         }
                     }
                 ],
@@ -320,6 +310,36 @@ const docTemplate = `{
                 }
             }
         },
+        "/deleteMatch": {
+            "delete": {
+                "description": "Deletes the match",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Match"
+                ],
+                "parameters": [
+                    {
+                        "description": "Match Id",
+                        "name": "matchId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/deleteTeamByID": {
             "delete": {
                 "description": "Delete the team",
@@ -331,19 +351,13 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "ID of the team",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "description": "ID of the user",
-                        "name": "user_id",
+                        "name": "teamId",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n \"teamId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -369,11 +383,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "Id of the team to end its inning",
-                        "name": "team_id",
+                        "name": "matchDetils",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n \"matchId\":\"string\",\n \"teamId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -398,12 +413,13 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Id of the match to end",
-                        "name": "match_id",
+                        "description": "Id of the match to end it",
+                        "name": "matchDetils",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n \"matchId\":\"string\",\n \"teamId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -429,15 +445,6 @@ const docTemplate = `{
                 "tags": [
                     "Authentication"
                 ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "token generated for the user",
-                        "name": "token",
-                        "in": "header",
-                        "required": true
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -462,12 +469,47 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Id of the player",
-                        "name": "id",
+                        "description": "ID of the player",
+                        "name": "playerId",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n\"playerId\":\"string\"\n}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/sendOTP": {
+            "post": {
+                "description": "Sends a OTp to the nuber entered",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "Phone Number of registered user",
+                        "name": "phoneNumber",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "{\n\"phoneNumber\":\"string\"\n}"
                         }
                     }
                 ],
@@ -511,12 +553,13 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Match Id",
-                        "name": "matchId",
+                        "description": "Id of the match ",
+                        "name": "matchDetails",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n \"matchId\":\"string\" \n}"
                         }
                     }
                 ],
@@ -573,11 +616,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "ID of the player",
-                        "name": "id",
+                        "name": "playerId",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object"
+                            "type": "string",
+                            "example": "{\n\"playerId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -602,15 +646,13 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "description": "Map of key-value pairs",
-                        "name": "myMap",
+                        "description": "Id of the match whose scorecard is to be shown",
+                        "name": "matchId",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "type": "string",
+                            "example": "{\n \"matchId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -636,11 +678,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "description": "ID of the team",
-                        "name": "team_id",
+                        "name": "teamId",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "string"
+                            "type": "string",
+                            "example": "{\n \"userId\":\"string\",\n \"teamId\":\"string\"\n}"
                         }
                     }
                 ],
@@ -665,11 +708,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
                         "description": "ID of the User",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
+                        "name": "userId",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "{\n\"userId\":\"string\"\n}"
+                        }
                     }
                 ],
                 "responses": {
@@ -726,13 +772,6 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "string",
-                        "description": "token generated for the user",
-                        "name": "token",
-                        "in": "header",
-                        "required": true
-                    },
-                    {
                         "description": "user updated datas",
                         "name": "userDetails",
                         "in": "body",
@@ -784,6 +823,40 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/verifyOTP": {
+            "post": {
+                "description": "Verifies the OTP sent to the user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Authentication"
+                ],
+                "parameters": [
+                    {
+                        "description": "Phone Number of registered user and the otp sent to it",
+                        "name": "details",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "{\n\"phoneNumber\":\"string\",\n\"otp\":\"string\"\n}"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -805,7 +878,8 @@ const docTemplate = `{
                 "ballType",
                 "baller",
                 "batsmen",
-                "matchId"
+                "matchId",
+                "runs"
             ],
             "properties": {
                 "ballType": {
@@ -824,7 +898,16 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "runs": {
-                    "type": "integer"
+                    "type": "integer",
+                    "enum": [
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        7
+                    ]
                 }
             }
         },
@@ -846,9 +929,6 @@ const docTemplate = `{
                 },
                 "createdAt": {
                     "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "economy": {
                     "type": "number"
@@ -897,14 +977,11 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "phoneNumber",
-                "userName"
+                "username"
             ],
             "properties": {
                 "createdAt": {
                     "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "isLoggedIn": {
                     "type": "boolean"
@@ -915,13 +992,16 @@ const docTemplate = `{
                 "role": {
                     "type": "string"
                 },
+                "token": {
+                    "type": "string"
+                },
                 "updatedAt": {
                     "type": "string"
                 },
-                "userName": {
+                "user_id": {
                     "type": "string"
                 },
-                "user_id": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -1075,9 +1155,6 @@ const docTemplate = `{
                 },
                 "decision": {
                     "type": "string"
-                },
-                "deletedAt": {
-                    "$ref": "#/definitions/gorm.DeletedAt"
                 },
                 "head_team": {
                     "type": "string"

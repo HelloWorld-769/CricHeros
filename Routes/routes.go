@@ -31,7 +31,7 @@ func Routes() {
 	mux.HandleFunc("/sendOTP", c.SendOtpHandler).Methods("POST")
 	mux.HandleFunc("/verifyOTP", c.VerifyOTPHandler).Methods("POST")
 	mux.HandleFunc("/logout", c.LogOut).Methods("GET")
-	mux.HandleFunc("/updateProfile", c.UpdateProfile).Methods("POST")
+	mux.Handle("/updateProfile", c.LoginMiddlerware(http.HandlerFunc(c.UpdateProfile))).Methods("POST")
 
 	//Player routes
 	mux.Handle("/createPlayer", c.LoginMiddlerware(http.HandlerFunc(c.AddPlayerHandler))).Methods("POST")
