@@ -6,6 +6,7 @@ import (
 	u "cricHeros/Utils"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/twilio/twilio-go"
 
@@ -94,9 +95,18 @@ func VerifyOTPHandler(w http.ResponseWriter, r *http.Request) {
 
 		var userDetails models.Credential
 		db.DB.Where("phone_number=?", mp["phoneNumber"]).First(&userDetails)
-
+		expirationTime := time.Now().Add(time.Minute * 5)
+		fmt.Println("Cookie expiration time: ", expirationTime)
 		userDetails.IsLoggedIn = true
 		tokenString := u.CreateToken(userDetails)
+		cookie := &http.Cookie{
+			Name:  "token",
+			Value: tokenString,
+			// Secure: true,
+			// HttpOnly: true,
+			Expires: expirationTime,
+		}
+		http.SetCookie(w, cookie)
 		userDetails.Token = tokenString
 		db.DB.Where("user_id=?", userDetails.User_ID).Updates(userDetails)
 		u.ShowResponse("Success", 200, tokenString, w)
@@ -194,21 +204,31 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 // @Tags Authentication
 // @Router /logOut [get]
 func LogOut(w http.ResponseWriter, r *http.Request) {
-	tokenString := r.Header.Get("token")
+	tokenString, err := r.Cookie("token")
+
+	if err != nil {
+		u.ShowResponse("Failure", 403, err.Error(), w)
+		return
+	}
 	var blackList models.Blacklist
 	//Decode the token
-	claims, err := u.DecodeToken(tokenString)
+	claims, err := u.DecodeToken(tokenString.Value, w)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err.Error(), w)
 		return
 	}
 
-	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserID).Update("is_logged_in", false)
+	db.DB.Model(&models.Credential{}).Where("user_id=?", claims.UserId).Update("is_logged_in", false)
 
-	blackList.Token = tokenString
+	blackList.Token = tokenString.Value
 	db.DB.Create(blackList)
-	u.ShowResponse("Success", 200, "Logged out successfully", w)
 
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Expires: time.Now(),
+	})
+
+	u.ShowResponse("Success", 200, "Logged out successfully", w)
 }
 
 // @Description Updates the data of the user
@@ -224,10 +244,14 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	var creds models.Credential
 	json.NewDecoder(r.Body).Decode(&creds)
 
-	tokenString := r.Header.Get("token")
+	tokenString, err := r.Cookie("token")
+	if err != nil {
+		u.ShowResponse("Failure", 403, err.Error(), w)
+		return
+	}
 
 	//Decode the token
-	claims, err := u.DecodeToken(tokenString)
+	claims, err := u.DecodeToken(tokenString.Value, w)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
@@ -237,7 +261,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db.DB.Where("u_id=?", claims.UserID).Updates(&creds)
+	db.DB.Where("u_id=?", claims.UserId).Updates(&creds)
 	u.ShowResponse("Success", 200, "User updated successfully", w)
 
 }

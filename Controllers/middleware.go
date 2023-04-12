@@ -3,31 +3,24 @@ package controllers
 import (
 	"context"
 	db "cricHeros/Database"
-	models "cricHeros/Models"
 	u "cricHeros/Utils"
-	"fmt"
 	"net/http"
-	"os"
-
-	"github.com/golang-jwt/jwt/v4"
 )
 
 func AdminMiddlerware(originalHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("token")
-		claims := &models.Claims{}
-
-		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("error")
-			}
-			return []byte(os.Getenv("SECRET_KEY")), nil
-		})
-		if err != nil || !parsedToken.Valid {
-			u.ShowResponse("Failure", 401, "Invalid Token", w)
+		tokenString, err := r.Cookie("token")
+		if err != nil {
+			u.ShowResponse("Failure", 403, err.Error(), w)
 			return
 		}
-		ctx := context.WithValue(r.Context(), "userId", claims.UserID)
+
+		claims, err := u.DecodeToken(tokenString.Value, w)
+		if err != nil {
+			u.ShowResponse("Failure", 401, err, w)
+			return
+		}
+		ctx := context.WithValue(r.Context(), "userId", claims.UserId)
 		if claims.Role == "admin" {
 			originalHandler.ServeHTTP(w, r.WithContext(ctx))
 		} else {
@@ -38,28 +31,15 @@ func AdminMiddlerware(originalHandler http.Handler) http.Handler {
 
 func LoginMiddlerware(originalHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tokenString := r.Header.Get("token")
-		claims := &models.Claims{}
-		var exists bool
-		parsedToken, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("error")
-			}
-			return []byte(os.Getenv("SECRET_KEY")), nil
-		})
-		if err != nil || !parsedToken.Valid {
-			u.ShowResponse("Failure", 401, "Invalid Token", w)
-			return
-		}
-		var cred models.Credential
-		err = db.DB.Where("user_id=?", claims.UserID).First(&cred).Error
-		if err != nil {
-			u.ShowResponse("Failure", 400, err, w)
-			return
-		}
 
+		tokenString, err := r.Cookie("token")
+		var exists bool
+		if err != nil {
+			u.ShowResponse("Failure", 403, err.Error(), w)
+			return
+		}
 		query := "SELECT EXISTS(SELECT * FROM blacklists where token=?)"
-		db.DB.Raw(query, tokenString).Scan(&exists)
+		db.DB.Raw(query, tokenString.Value).Scan(&exists)
 		if !exists {
 			originalHandler.ServeHTTP(w, r)
 		} else {

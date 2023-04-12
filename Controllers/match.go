@@ -24,23 +24,31 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 	u.EnableCors(&w)
 	u.SetHeader(w)
 	userId := r.Context().Value("userId")
-	fmt.Println("Claims is:", userId)
 	var match models.Match
 	var count int64
-
+	var exists bool
 	err := json.NewDecoder(r.Body).Decode(&match)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
-	query := "SELECT * FROM teams where t_id=? and p_id IN (SELECT p_id FROM teams WHERE t_id=? )"
-	db.DB.Raw(query, match.T1_ID, match.T2_ID).Count(&count)
-	fmt.Println("Count is: ", count)
-	if count != 0 {
-		u.ShowResponse("Failure", 400, "Common record found Please Edit your teams", w)
+	//cehck if the match is created with same teams but the previous match is not completed yet
+	query := "SELECT EXISTS(SELECT status FROM matches where t1_id=? AND t2_id=? AND status='active')"
+	db.DB.Raw(query, match.T1_ID, match.T2_ID).Scan(&exists)
+	if exists {
+		u.ShowResponse("Failure", 400, "Match with the given team is not completed yet.Please complete that match first.", w)
 		return
 	}
+
+	//check if one player is common in both teams
+	query = "SELECT * FROM teams where t_id=? and p_id IN (SELECT p_id FROM teams WHERE t_id=? )"
+	db.DB.Raw(query, match.T1_ID, match.T2_ID).Count(&count)
+	if count != 0 {
+		u.ShowResponse("Failure", 400, "Common record found please edit your teams", w)
+		return
+	}
+
 	match.U_ID = userId.(string)
 	now := time.Now()
 	match.Date = now.Format("02 Jan 2006")
@@ -142,7 +150,7 @@ func EndMatchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	matchData.Status = "Completed"
+	matchData.Status = "completed"
 
 	//find the scorecard relatedd to that match
 	err = db.DB.Where("m_id=?", mp["matchId"].(string)).First(&scorecard).Error

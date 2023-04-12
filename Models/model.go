@@ -148,11 +148,10 @@ type Credential struct {
 }
 
 type Claims struct {
-	UserID string
+	UserId string
 	Role   string
 	jwt.RegisteredClaims
 }
-
 type Inning struct {
 	M_ID      string
 	T_ID      string
