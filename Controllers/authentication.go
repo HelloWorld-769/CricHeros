@@ -186,9 +186,16 @@ func AdminRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	Credential.Role = "admin"
 
+	//validation check
+	validationErr := u.CheckValidation(Credential)
+	if validationErr != nil {
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		return
+	}
+
 	err = db.DB.Where("phone_number=?", Credential.PhoneNumber).First(&existRecord).Error
 	if err == nil {
-		u.ShowResponse("Failure", 400, "User already register please login to contnue", w)
+		u.ShowResponse("Failure", 400, "Admin already register please login to contnue", w)
 		return
 	}
 	err = db.DB.Create(&Credential).Error
@@ -211,6 +218,7 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 
 	var Credential models.Credential
+	var existRecord models.Credential
 
 	err := json.NewDecoder(r.Body).Decode(&Credential)
 	if err != nil {
@@ -218,6 +226,18 @@ func UserRegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	Credential.Role = "user"
+
+	//validation check
+	validationErr := u.CheckValidation(Credential)
+	if validationErr != nil {
+		u.ShowResponse("Failure", 400, validationErr.Error(), w)
+		return
+	}
+	err = db.DB.Where("phone_number=?", Credential.PhoneNumber).First(&existRecord).Error
+	if err == nil {
+		u.ShowResponse("Failure", 400, "Admin already register please login to contnue", w)
+		return
+	}
 	err = db.DB.Create(&Credential).Error
 	if err != nil {
 		u.ShowResponse("Failure", 500, "Internal Server Error", w)

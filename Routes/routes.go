@@ -3,7 +3,7 @@ package routes
 import (
 	c "cricHeros/Controllers"
 	db "cricHeros/Database"
-	socket "cricHeros/Socket"
+	constants "cricHeros/Utils"
 	_ "cricHeros/docs"
 	"fmt"
 	"log"
@@ -21,9 +21,6 @@ func Routes() {
 	if err != nil {
 		panic(err)
 	}
-
-	socketServer := socket.SocketInit()
-	defer socketServer.Close()
 
 	//Authentication Handler
 	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler).Methods("POST")
@@ -70,7 +67,10 @@ func Routes() {
 	mux.Handle("/ballUpdate", c.AdminMiddlerware(c.LoginMiddlerware(http.HandlerFunc(c.UpdateBallRecord)))).Methods("POST")
 
 	//Socket Server
-	mux.Handle("/socket.io/", socketServer)
+
+	c.SocketHandler(constants.SocketServer)
+	go constants.SocketServer.Serve()
+	mux.Handle("/socket.io/", constants.SocketServer)
 
 	//API doucmentation route
 	mux.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler).Methods("GET")

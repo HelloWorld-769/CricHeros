@@ -57,8 +57,8 @@ func CheckValidation(data interface{}) error {
 
 func CreateToken(tokenPayload models.Credential) string {
 
-	expirationTime := time.Now().Add(3 * time.Minute)
-	fmt.Println("token Exipiration time is :", expirationTime)
+	expirationTime := time.Now().Add(2 * time.Hour)
+	fmt.Println("JWT token Exipiration time is :", expirationTime)
 	claims := models.Claims{
 		UserId: tokenPayload.User_ID,
 		Role:   tokenPayload.Role,
@@ -167,5 +167,6 @@ func DecodePasetoToken(token string, w http.ResponseWriter) (*models.Payload, er
 		http.SetCookie(w, &cookie)
 
 	}
+
 	return payload, nil
 }

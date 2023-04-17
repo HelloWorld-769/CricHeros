@@ -5,6 +5,7 @@ import (
 	models "cricHeros/Models"
 	u "cricHeros/Utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -16,23 +17,24 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 	ball.Runs = scoreCardData.Runs
 	ball.P_ID = scoreCardData.Baller
 
-	/*
-		//optional
-		var matchInning []models.Balls
-		db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchInning)
+	//optional
+	var matchInning []models.Inning
+	db.DB.Where("m_id=?", scoreCardData.M_ID).First(&matchInning)
 
-		if matchInning == nil {
-			ball.Inning = "Inning 1"
-		}
-		if matchInning[0].Inning == "Inning 1" {
-			ball.Inning = "Inning 2"
-		}
+	if matchInning == nil {
+		ball.Inning = "Inning 1"
+	} else {
 
-	*/
+		ball.Inning = "Inning 2"
+		ball.BallCount = 1
+		ball.Over = 1
+
+	}
+
 	var lastBallRecord models.Balls
-	query := "SELECT overs FROM balls ORDER BY created_at DESC LIMIT 1"
+	query := "SELECT * FROM balls ORDER BY created_at DESC LIMIT 1"
 	db.DB.Raw(query).Scan(&lastBallRecord)
-	//fmt.Println("lastBallRecord is ", lastBallRecord)
+	fmt.Println("lastBallRecord is ", lastBallRecord)
 	if lastBallRecord.Over == 0 {
 		ball.BallCount = 1
 		ball.Over = 1
@@ -57,6 +59,7 @@ func AddBallRecordHandler(scoreCardData models.CardData) {
 	}
 
 	db.DB.Create(&ball)
+	u.SocketServer.OnEvent("/", "scorecard", GetData)
 }
 
 // @Description Update the ball

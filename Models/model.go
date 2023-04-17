@@ -7,19 +7,10 @@ import (
 	"gorm.io/gorm"
 )
 
-// User represents the user for this application
-//
-// A user is the security principal for this application.
-// It's also used as one of main axes for reporting.
-//
-// A user can have friends with whom they can share what they like.
-//
-// swagger:model
 type Response struct {
-	Status string `json:"status"`
-
-	Code int64       `json:"code"`
-	Data interface{} `json:"data"`
+	Status string      `json:"status"`
+	Code   int64       `json:"code"`
+	Data   interface{} `json:"data"`
 }
 
 type PlayerData struct {
@@ -129,7 +120,7 @@ type ScoreCard struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Balls struct {
-	Inning    string
+	Inning    string  `json:"inning"`
 	B_ID      string  `json:"ballId" gorm:"default:uuid_generate_v4()"`
 	M_ID      string  `json:"matchId" `
 	P_ID      string  `json:"playerId"  `
@@ -146,7 +137,7 @@ type CardData struct {
 	M_ID      string `json:"matchId" validate:"required"`
 	Batsmen   string `json:"batsmen" validate:"required"`
 	Baller    string `json:"baller" validate:"required"`
-	Runs      int64  `json:"runs" validate:"required,oneof=1 2 3 4 5 6 7"`
+	Runs      int64  `json:"runs" validate:"oneof=0 1 2 3 4 5 6 7"`
 	Ball_Type string `json:"ballType" validate:"required"`
 	PrevRuns  int64  `json:"prevRuns"`
 }
@@ -154,7 +145,7 @@ type Credential struct {
 	Token       string
 	User_ID     string `json:"user_id" gorm:"default:uuid_generate_v4();primaryKey"`
 	Username    string `json:"username"  validate:"required"`
-	PhoneNumber string `json:"phoneNumber" validate:"required" gorm:"unique"`
+	PhoneNumber string `json:"phoneNumber" validate:"required,len=10" gorm:"unique"`
 	Role        string `json:"role"`
 	IsLoggedIn  bool   `json:"isLoggedIn" gorm:"default:false"`
 	CreatedAt   time.Time

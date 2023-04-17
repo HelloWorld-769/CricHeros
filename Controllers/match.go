@@ -27,14 +27,38 @@ func CreateMatchHandler(w http.ResponseWriter, r *http.Request) {
 	var match models.Match
 	var count int64
 	var exists bool
+	var exists2 bool
 	err := json.NewDecoder(r.Body).Decode(&match)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
-	//cehck if the match is created with same teams but the previous match is not completed yet
-	query := "SELECT EXISTS(SELECT status FROM matches where t1_id=? AND t2_id=? AND status='active')"
+	//check if the entered team has no player then show error
+
+	//check if the entered teams ids exists or not
+	query := "SELECT EXISTS(SELECT * FROM teams WHERE t_id=?)"
+	db.DB.Raw(query, match.T1_ID).Scan(&exists)
+	db.DB.Raw(query, match.T2_ID).Scan(&exists2)
+	if !exists || !exists2 {
+		u.ShowResponse("Failure", 400, "Team with given team id do not exists please register the team first", w)
+		return
+	}
+
+	query = "SELECT EXISTS(SELECT * FROM teams WHERE t_id=? AND p_id='')"
+	db.DB.Raw(query, match.T1_ID).Scan(&exists)
+	db.DB.Raw(query, match.T2_ID).Scan(&exists2)
+	if exists || exists2 {
+		u.ShowResponse("Failure", 400, "The selected team has no players", w)
+		return
+	}
+
+	if match.T1_ID == match.T2_ID {
+		u.ShowResponse("Failure", 400, "Team 1 and Team 2 cannot be same", w)
+		return
+	}
+	//check if the match is created with same teams but the previous match is not completed yet
+	query = `SELECT EXISTS(SELECT status FROM matches where t1_id=? AND t2_id=? AND status='active')`
 	db.DB.Raw(query, match.T1_ID, match.T2_ID).Scan(&exists)
 	if exists {
 		u.ShowResponse("Failure", 400, "Match with the given team is not completed yet.Please complete that match first.", w)

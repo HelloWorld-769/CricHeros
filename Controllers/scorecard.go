@@ -46,9 +46,23 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 	//var mp = make(map[string]interface{})
 	var scoreCardData models.CardData
 	var matchMapping models.MatchRecord
+	var exists bool
 	err := json.NewDecoder(r.Body).Decode(&scoreCardData)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
+		return
+	}
+
+	if scoreCardData.Batsmen == scoreCardData.Baller {
+		u.ShowResponse("Failure", 400, "Batsmen and bowler can not b same", w)
+		return
+	}
+	//Check taht the provided player is in hat team which is linked to that match or not
+	query := "SELECT EXISTS ( SELECT * FROM players JOIN teams ON teams.p_id = players.p_id JOIN matches ON (matches.t1_id = teams.t_id OR matches.t2_id = teams.t_id) WHERE players.p_id = ? AND matches.m_id = ? )"
+
+	db.DB.Raw(query, scoreCardData.Batsmen, scoreCardData.M_ID).Scan(&exists)
+	if !exists {
+		u.ShowResponse("Failure", 400, "This player id not linked with the match or is not in that team", w)
 		return
 	}
 
@@ -150,7 +164,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			u.ShowResponse("Success", 200, bowlerRecord, w)
+			// u.ShowResponse("Success", 200, bowlerRecord, w)
 		} else {
 			existRecord.RunGiven += scoreCardData.Runs
 			if scoreCardData.Ball_Type == "no_ball" {
@@ -172,7 +186,7 @@ func ScorecardRecordHandler(w http.ResponseWriter, r *http.Request) {
 				u.ShowResponse("Failure", 400, err, w)
 				return
 			}
-			u.ShowResponse("Success", 200, existRecord, w)
+			//u.ShowResponse("Success", 200, existRecord, w)
 		}
 	} else {
 		u.ShowResponse("Failure", 400, "Bowler not selected", w)

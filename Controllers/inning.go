@@ -21,6 +21,7 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	u.SetHeader(w)
 	var mp = make(map[string]interface{})
 	var teamData []models.Team
+	var exists bool
 	err := json.NewDecoder(r.Body).Decode(&mp)
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
@@ -35,6 +36,15 @@ func EndInningHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
+	}
+
+	query := "SELECT EXISTS(SELECT * FROM matches WHERE m_id=? AND (t1_id=? OR t2_id='?))"
+	db.DB.Raw(query, mp["matchId"], mp["teamId"], mp["teamId"]).Scan(&exists)
+
+	if !exists {
+		u.ShowResponse("Failure", 400, "The given team id is not linked with the match..", w)
+		return
+
 	}
 
 	err = db.DB.Where("t_id=?", mp["teamId"].(string)).Find(&teamData).Error

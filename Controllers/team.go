@@ -20,10 +20,10 @@ import (
 // @Router /createTeam [post]
 func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 
-	id := r.URL.Query().Get("id")
 	u.SetHeader(w)
 	u.EnableCors(&w)
 	var team models.Team
+	var exists bool
 	err := json.NewDecoder(r.Body).Decode(&team)
 
 	if err != nil {
@@ -31,19 +31,29 @@ func CreateTeamHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//validation check
 	validationErr := u.CheckValidation(team)
 	if validationErr != nil {
 		u.ShowResponse("Failure", 400, validationErr.Error(), w)
 		return
 	}
 
-	team.U_ID = id
+	//check if the user exists or not
+	query := "SELECT EXISTS(SELECT * FROM credentials where user_id=?)"
+	db.DB.Raw(query, team.U_ID).Scan(&exists)
+	if !exists {
+		u.ShowResponse("Failure", 400, "User with given user id do not exists..", w)
+		return
+	}
+
+	//if it exists the create the team
 	err = db.DB.Create(&team).Error
 	if err != nil {
 		u.ShowResponse("Failure", 400, err, w)
 		return
 	}
 
+	//Send success response
 	u.ShowResponse("Success", 200, team, w)
 }
 
