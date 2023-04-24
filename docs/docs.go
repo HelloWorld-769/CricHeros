@@ -878,8 +878,7 @@ const docTemplate = `{
                 "ballType",
                 "baller",
                 "batsmen",
-                "matchId",
-                "runs"
+                "matchId"
             ],
             "properties": {
                 "ballType": {
@@ -900,6 +899,7 @@ const docTemplate = `{
                 "runs": {
                     "type": "integer",
                     "enum": [
+                        0,
                         1,
                         2,
                         3,
@@ -1182,7 +1182,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0.0",
-	Host:             "localhost:8000",
+	Host:             "13.233.130.222:8000",
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Cric Heros API",

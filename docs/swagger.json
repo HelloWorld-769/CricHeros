@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0.0"
     },
-    "host": "localhost:8000",
+    "host": "13.233.130.222:8000",
     "paths": {
         "/addCareer": {
             "post": {
@@ -870,8 +870,7 @@
                 "ballType",
                 "baller",
                 "batsmen",
-                "matchId",
-                "runs"
+                "matchId"
             ],
             "properties": {
                 "ballType": {
@@ -892,6 +891,7 @@
                 "runs": {
                     "type": "integer",
                     "enum": [
+                        0,
                         1,
                         2,
                         3,

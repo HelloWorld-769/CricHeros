@@ -21,6 +21,7 @@ func Routes() {
 	if err != nil {
 		panic(err)
 	}
+	mux.Use(c.CORSMiddleware)
 
 	//Authentication Handler
 	mux.HandleFunc("/adminRegister", c.AdminRegisterHandler).Methods("POST")

@@ -21,6 +21,7 @@ definitions:
         type: integer
       runs:
         enum:
+        - 0
         - 1
         - 2
         - 3
@@ -34,7 +35,6 @@ definitions:
     - baller
     - batsmen
     - matchId
-    - runs
     type: object
   models.Career:
     properties:
@@ -216,7 +216,7 @@ definitions:
     - match_id
     - tail_team
     type: object
-host: localhost:8000
+host: 13.233.130.222:8000
 info:
   contact: {}
   description: API Documentation for Cric Heros
