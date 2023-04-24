@@ -12,7 +12,7 @@ import (
 // @title Cric Heros API
 // @version 1.0.0
 // @description API Documentation for Cric Heros
-// @host 13.233.130.222:8000
+// @host 13.233.130.222:3000
 func main() {
 	envErr := godotenv.Load(".env")
 	twilio.TwilioInit(os.Getenv("TWILIO_AUTH_TOKEN"))

@@ -216,7 +216,7 @@ definitions:
     - match_id
     - tail_team
     type: object
-host: 13.233.130.222:8000
+host: 13.233.130.222:3000
 info:
   contact: {}
   description: API Documentation for Cric Heros
